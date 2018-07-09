@@ -1,6 +1,7 @@
 #!/usr/bin/env/bash
-# stlデータをURDFのmeshファイルとして使えるようにバイナリに変換します
-# このディレクトリに変換したいSTLファイルを入れ、このスクリプトを実行してください
+# Change the ascii stl to binary stl for creating urdf file.
+# Put all stl files that you want to convert to binary into this repository. 
+# Then, run this script.
 
 for filename in *.stl; do python3 mm2m.py $filename; done
 for filename in *_m.stl; do ruby convertSTL.rb $filename; done

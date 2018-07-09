@@ -1,19 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-"""
- [summary]
- mm 単位になっているstlファイルを m 単位に直す
-
-[description]
- python mm_to_m.py sample.stl
- のように実行すると、sample_m.stlという名前の m 単位に変換したファイルを保存する。
-
-コマンドラインで実行する場合、次のコードでフォルダ内の.stlファイルを一括でm系に直す
- for filename in *.stl; do python3 mm_to_m.py $filename; done
-"""
-
-
 import sys
 
 def mm_to_m(mm):

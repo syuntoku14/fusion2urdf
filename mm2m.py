@@ -3,14 +3,17 @@
 
 """
  [summary]
- mm 単位になっているstlファイルを m 単位に直す
+ Convert the unit of STL file to meter from millimeter.
 
 [description]
- python mm_to_m.py sample.stl
- のように実行すると、sample_m.stlという名前の m 単位に変換したファイルを保存する。
+ Run the following code to generate meter stl file.
+ 
+ "python mm_to_m.py sample.stl"
+ 
+ This create sample_m.stl file its unit is meter.
 
-コマンドラインで実行する場合、次のコードでフォルダ内の.stlファイルを一括でm系に直す
- for filename in *.stl; do python3 mm_to_m.py $filename; done
+ If you want to change some stl files at onece, run the following code.
+ "for filename in *.stl; do python3 mm_to_m.py $filename; done"
 """
 
 
