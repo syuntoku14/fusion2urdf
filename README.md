@@ -1,5 +1,7 @@
 # fusion2urdf_tools
 
-### 作成中
+### Under Construction
 
-Fusion 360で作成したCADファイルから、効率よくURDFを作成します。
+This repository shows how to create urdf from fusion 360 efficiently.
+
+**convertSTL.rb** was created by [@Chris Polis](https://github.com/cmpolis/convertSTL#author)
