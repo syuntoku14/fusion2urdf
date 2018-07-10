@@ -28,11 +28,11 @@ def mm_to_m(mm):
 
 def main():
     assert sys.argv[1][-4:] == '.stl', 'stlファイルを入力してください'
-    file_name = sys.argv[1][:-4]  # file名の拡張子を除いた部分
+    file_name = sys.argv[1][:-4]  # file name without .stl
     path_r = file_name + '.stl'
     new_stl = []
 
-    # mm単位のstlファイルを読み込む
+    # loat millimeter .stl file
     with open(path_r) as stl:
         for line in stl:
             moji = list(line.split())
@@ -42,14 +42,14 @@ def main():
 
     with open(path_w, mode='w') as n_stl:
         for line in new_stl:
-            # vertex 以外の文字列はそのまま
+            # remain the strings except for 'vertex'
             if len(line) == 0:
                 continue
 
             if line[0] != 'vertex':
                 n_stl.write(' '.join(line))
                 n_stl.write('\n')
-            # vertexは mm から m に変換する
+            # convert vertex from mm to m
             else:
                 temp = ['vertex']
                 for mm in line:

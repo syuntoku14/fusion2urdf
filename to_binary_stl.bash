@@ -11,3 +11,7 @@ mkdir mm_stl m_stl bin_stl
 mv *_m.stl ./m_stl
 mv *-binary.stl ./bin_stl
 mv *.stl ./mm_stl
+
+mkdir joint_info
+python info2xacro.py info_joint.txt
+mv info_joint.txt info_joint_m.urdf.xacro joint_info
