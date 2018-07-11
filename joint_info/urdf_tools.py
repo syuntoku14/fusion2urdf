@@ -1,12 +1,7 @@
 # coding: utf-8
 
 """
- [summary]
- Color should be added at the gen_link
-[description]
-
-Returns:
-    [type] -- [description]
+ Useful tools to create urdf file from stl
 """
 
 
