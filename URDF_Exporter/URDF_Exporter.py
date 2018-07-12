@@ -192,10 +192,10 @@ def export_stl(design, save_dir, components):
         exportMgr = design.exportManager
         
         # get the script location
-        try: os.mkdir(save_dir + '/m_stl')
+        try: os.mkdir(save_dir + '/mm_stl')
         except: pass
     
-        scriptDir = save_dir + '/m_stl'  
+        scriptDir = save_dir + '/mm_stl'  
         
         # export the occurrence one by one in the component to a specified file
         for component in components:
@@ -204,9 +204,9 @@ def export_stl(design, save_dir, components):
                 fileName = scriptDir + "/" + occ.component.name
                 
                 # create stl exportOptions
-                stlExportOptions = exportMgr.createSTLExportOptions(occ, fileName)
+                stlExportOptions = exportMgr.createSTLExportOptions(occ, fileName, )
                 stlExportOptions.sendToPrintUtility = False
-                
+                stlExportOptions.isBinaryFormat = False
                 exportMgr.execute(stlExportOptions)
 
 
