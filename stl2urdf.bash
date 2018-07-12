@@ -1,6 +1,6 @@
 #!/usr/bin/env/bash
-# Change the ascii stl to binary stl for creating urdf file.
 # Put all stl files that you want to convert to binary into "mm_stl". 
+# Also, add a joint information at joint_info/joints.py.
 # Then, run this script.
 
 for filename in ./mm_stl/*.stl; do python mm2m_stl.py $filename; done
