@@ -8,6 +8,7 @@ from xml.etree.ElementTree import Element, SubElement, Comment, tostring
 from xml.dom import minidom
 
 # length unit is 'cm' and inertial unit is 'kg/cm^2'
+# Maybe if the name has space, this will cause some error.
 
 def prettify(elem):
     """Return a pretty-printed XML string for the Element.
@@ -135,16 +136,28 @@ def joint_gen(dct, repo, link_dict, file_name):
 
 
 def set_joints_dict(root, joints_dict):
+    msg = ''
+    
     for joint in root.joints:
         joint_dict = {}
-        joint_dict['xyz'] = [round(i / 100.0, 6) for i in \
-            joint.geometryOrOriginOne.origin.asArray()]  # converted to meter
+
         joint_dict['axis'] = [round(i / 100.0, 6) for i in \
             joint.jointMotion.rotationAxisVector.asArray()]  # converted to meter
         joint_dict['parent'] = joint.occurrenceTwo.name[:-2]
         joint_dict['child'] = joint.occurrenceOne.name[:-2]
+        try:
+            joint_dict['xyz'] = [round(i / 100.0, 6) for i in \
+            joint.geometryOrOriginOne.origin.asArray()]  # converted to meter
+        except:
+            try:
+                joint_dict['xyz'] = [round(i / 100.0, 6) for i in \
+                joint.geometryOrOriginTwo.origin.asArray()]  # converted to meter
+            except:
+                msg = joint.name + " doesn't have joint origin. Please set it and run Again."
+                continue
+        msg = 'Successfully generated URDF file'
         joints_dict[joint.name] = joint_dict
-
+    return msg
 
 def set_components_dict(root, components, components_dict):
         # Get component properties.            
@@ -212,6 +225,8 @@ def export_stl(design, save_dir, components):
 
 def run(context):
     ui = None
+    msg = ''
+    
     try:
         app = adsk.core.Application.get()
         ui = app.userInterface
@@ -239,18 +254,15 @@ def run(context):
         # Generate URDF
         # Get joint information. All joints are related to root. 
         joints_dict = {}
-        set_joints_dict(root, joints_dict)
-        
-        # print(joints_dict['wheel_middle_right'])
+        msg = set_joints_dict(root, joints_dict)
         
         # Get link information.
         inertial_dict = {}
         set_components_dict(root, components, inertial_dict)
         
-        # print(links_dict['front_leg_left'])
         links_dict = {}
         gen_urdf(joints_dict, links_dict, inertial_dict, package_name, save_dir, robot_name)
-        ui.messageBox('Successfully generated URDF file', title)
+        ui.messageBox(msg, title)
 
     except:
         if ui:
