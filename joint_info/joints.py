@@ -1,7 +1,7 @@
 """
  [summary]
  Write the joints information of your robot.
- Keep in mind that your the name of base link must be "base_link".
+ Keep in mind that the name of base link must be "base_link".
  Remaining code is just an example. Change the code as you like.
 """
 
