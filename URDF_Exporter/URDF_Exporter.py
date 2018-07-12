@@ -8,7 +8,6 @@ from xml.etree.ElementTree import Element, SubElement, Comment, tostring
 from xml.dom import minidom
 
 # length unit is 'cm' and inertial unit is 'kg/cm^2'
-# Maybe if the name has space, this will cause some error.
 
 def prettify(elem):
     """Return a pretty-printed XML string for the Element.
@@ -135,9 +134,7 @@ def joint_gen(dct, repo, link_dict, file_name):
             f.write(joint.xml)
 
 
-def set_joints_dict(root, joints_dict):
-    msg = ''
-    
+def set_joints_dict(root, joints_dict, msg):
     for joint in root.joints:
         joint_dict = {}
 
@@ -154,25 +151,32 @@ def set_joints_dict(root, joints_dict):
                 joint.geometryOrOriginTwo.origin.asArray()]  # converted to meter
             except:
                 msg = joint.name + " doesn't have joint origin. Please set it and run Again."
-                continue
-        msg = 'Successfully generated URDF file'
+                break
+        if ' ' in joint.name:
+            msg = 'A space is detected in the name of ' + joint.name + '. Please remove spaces and run again.'
+            break
         joints_dict[joint.name] = joint_dict
     return msg
 
-def set_components_dict(root, components, components_dict):
-        # Get component properties.            
-        for component in components:
-            # Skip the root component.
-            component_dict = {}
-            if root == component:
-                continue
-            prop = component.getPhysicalProperties(adsk.fusion.CalculationAccuracy.HighCalculationAccuracy);
-            component_dict['mass'] = round(prop.mass, 6)  #kg
-            component_dict['inertia'] = [round(i / 10000.0, 6) for i in \
-                prop.getXYZMomentsOfInertia()[1:]]  #kg m^2
-            components_dict[component.name] = component_dict
-        
-        
+
+def set_inertial_dict(root, components, inertial_dict, msg):
+    # Get component properties.            
+    for component in components:
+        # Skip the root component.
+        component_dict = {}
+        if root == component:
+            continue
+        prop = component.getPhysicalProperties(adsk.fusion.CalculationAccuracy.HighCalculationAccuracy);
+        component_dict['mass'] = round(prop.mass, 6)  #kg
+        component_dict['inertia'] = [round(i / 10000.0, 6) for i in \
+        prop.getXYZMomentsOfInertia()[1:]]  #kg m^2
+        inertial_dict[component.name] = component_dict
+        if ' ' in component.name:
+            msg = 'A space is detected in the name of ' + component.name + '. Please remove spaces and run again.'
+            break
+    return msg
+
+
 def gen_urdf(joints_dict, links_dict, inertial_dict, package_name, save_dir, robot_name):
     file_name = save_dir + '/' + robot_name + '.urdf'  # the name of urdf file
     repo = package_name + '/bin_stl/'  # the repository of binary stl files
@@ -225,7 +229,8 @@ def export_stl(design, save_dir, components):
 
 def run(context):
     ui = None
-    msg = ''
+    success_msg = 'Successfully generated URDF file'
+    msg = success_msg
     
     try:
         app = adsk.core.Application.get()
@@ -254,16 +259,26 @@ def run(context):
         # Generate URDF
         # Get joint information. All joints are related to root. 
         joints_dict = {}
-        msg = set_joints_dict(root, joints_dict)
-        
-        # Get link information.
+        msg = set_joints_dict(root, joints_dict, msg)
+        if msg != success_msg:
+            ui.messageBox(msg, title)
+            return 0
+            
+        # Get inertial information.
         inertial_dict = {}
-        set_components_dict(root, components, inertial_dict)
+        msg = set_inertial_dict(root, components, inertial_dict, msg)
+        if msg != success_msg:
+            ui.messageBox(msg, title)
+            return 0
+        elif not 'base_link' in inertial_dict:
+            msg = 'There is no base_link. Please set base_link and run again.'
+            ui.messageBox(msg, title)
+            return 0
         
         links_dict = {}
         gen_urdf(joints_dict, links_dict, inertial_dict, package_name, save_dir, robot_name)
         ui.messageBox(msg, title)
-
+        
     except:
         if ui:
             ui.messageBox('Failed:\n{}'.format(traceback.format_exc()))
