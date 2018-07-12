@@ -1,0 +1,10 @@
+{
+	"autodeskProduct":	"Fusion360",
+	"type":	"script",
+	"author":	"syuntoku14",
+	"description":	{
+		"":	"Export stl and URDF file"
+	},
+	"supportedOS":	"windows|mac",
+	"editEnabled":	true
+}
