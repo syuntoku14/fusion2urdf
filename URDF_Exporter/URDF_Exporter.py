@@ -205,6 +205,31 @@ def file_dialog(ui):
         return False
         
 
+def copy_body(allOccs, old_comp):
+    bodies = old_comp.bRepBodies
+    transform = adsk.core.Matrix3D.create()    
+    occs = allOccs.addNewComponent(transform)  # this create new occs
+    old_comp.name, occs.component.name = occs.component.name, old_comp.name  #swap the name
+    old_comp.name = 'old_component'
+    occs = allOccs[-1]
+    for i in range(bodies.count):
+        body = bodies.item(i)
+        body.copyToComponent(occs)
+    
+
+def copy_component(components, allOccs, root):    
+    # duplicate all the components
+    coppied = []
+    for component in components:
+        name = component.name
+        if component == root or ('old_component' in name) or (name in coppied):
+            continue
+        if component.bRepBodies.count > 0:
+            copy_body(allOccs, component)
+            coppied.append(name)
+    #print(coppied)
+
+
 def export_stl(design, save_dir, components):
         # create a single exportManager instance
         exportMgr = design.exportManager
@@ -214,9 +239,6 @@ def export_stl(design, save_dir, components):
         scriptDir = save_dir + '/mm_stl'  
         # export the occurrence one by one in the component to a specified file
         for component in components:
-            if 'Component' in component.name:
-                continue
-            
             allOccu = component.allOccurrences
             for occ in allOccu:
                 fileName = scriptDir + "/" + occ.component.name              
@@ -244,6 +266,7 @@ def run(context):
         
         components = design.allComponents
         root = design.rootComponent  # root component        
+        allOccs = root.occurrences
 
         # set the names        
         package_name = 'fusion2urdf'
@@ -255,10 +278,7 @@ def run(context):
         
         save_dir = save_dir + '/' + robot_name
         try: os.mkdir(save_dir)
-        except: pass
-    
-        # Generate STl files
-        export_stl(design, save_dir, components)        
+        except: pass     
         
         # Generate URDF
         # Get joint information. All joints are related to root. 
@@ -281,6 +301,11 @@ def run(context):
         
         links_dict = {}
         gen_urdf(joints_dict, links_dict, inertial_dict, package_name, save_dir, robot_name)
+
+        # Generate STl files        
+        copy_component(components, allOccs, root)
+        export_stl(design, save_dir, components)   
+        
         ui.messageBox(msg, title)
         
     except:
