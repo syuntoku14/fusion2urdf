@@ -208,19 +208,18 @@ def file_dialog(ui):
 def export_stl(design, save_dir, components):
         # create a single exportManager instance
         exportMgr = design.exportManager
-        
         # get the script location
         try: os.mkdir(save_dir + '/mm_stl')
         except: pass
-    
         scriptDir = save_dir + '/mm_stl'  
-        
         # export the occurrence one by one in the component to a specified file
         for component in components:
+            if 'Component' in component.name:
+                continue
+            
             allOccu = component.allOccurrences
             for occ in allOccu:
-                fileName = scriptDir + "/" + occ.component.name
-                
+                fileName = scriptDir + "/" + occ.component.name              
                 # create stl exportOptions
                 stlExportOptions = exportMgr.createSTLExportOptions(occ, fileName, )
                 stlExportOptions.sendToPrintUtility = False
