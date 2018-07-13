@@ -1,9 +1,12 @@
 #!/usr/bin/env/bash
 
-for filename in ./mm_stl/*.stl; do python mm2m_stl.py $filename; done
-for filename in ./mm_stl/*_m.stl; do ruby convertSTL.rb $filename; done
+# input your robot name
+# example: '''bash stl2binary.bash my_robot'''
 
-mkdir m_stl bin_stl
+for filename in ./$1/mm_stl/*.stl; do python mm2m_stl.py $filename; done
+for filename in ./$1/mm_stl/*_m.stl; do ruby convertSTL.rb $filename; done
 
-mv ./mm_stl/*_m.stl ./m_stl
-mv ./mm_stl/*-binary.stl ./bin_stl
+mkdir ./$1/m_stl ./$1/bin_stl
+
+mv ./$1/mm_stl/*_m.stl ./$1/m_stl
+mv ./$1/mm_stl/*-binary.stl ./$1/bin_stl
