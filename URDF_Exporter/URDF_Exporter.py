@@ -8,6 +8,7 @@ from xml.etree.ElementTree import Element, SubElement, Comment, tostring
 from xml.dom import minidom
 
 # length unit is 'cm' and inertial unit is 'kg/cm^2'
+# If there is no 'body' in the root component, maybe the corrdinates are wrong.
 
 def prettify(elem):
     """Return a pretty-printed XML string for the Element.
@@ -127,7 +128,7 @@ def joint_gen(dct, repo, link_dict, file_name):
             parent = dct[j]['parent']
             child = dct[j]['child']
             xyz = [round(p-c, 6) for p, c in \
-                zip(link_dict[parent], link_dict[child])]  # xyz = paret - child
+                zip(link_dict[parent], link_dict[child])]  # xyz = parent - child
             joint = Joint(name=j, xyz=xyz, axis=dct[j]['axis'],\
                 parent=parent, child=child)
             joint.gen_joint_xml()
@@ -243,10 +244,10 @@ def run(context):
             return
         
         components = design.allComponents
-        root = design.rootComponent  # root component
-        package_name = 'fusion2urdf'
-        
+        root = design.rootComponent  # root component        
+
         # set the names        
+        package_name = 'fusion2urdf'
         robot_name = root.name.split()[0]
         save_dir = file_dialog(ui)
         if save_dir == False:
