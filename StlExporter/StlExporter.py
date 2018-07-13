@@ -55,8 +55,9 @@ def run(context):
             return
         
         components = design.allComponents        
-
-        save_dir = file_dialog(ui)
+        root = design.rootComponent
+        robot_name = root.name.split()[0]
+        save_dir = file_dialog(ui) + '/' + robot_name
         if save_dir == False:
             ui.messageBox('StlExporter was canceled', title)
             return 0

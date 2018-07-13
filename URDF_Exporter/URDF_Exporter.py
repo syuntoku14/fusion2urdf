@@ -180,7 +180,7 @@ def set_inertial_dict(root, components, inertial_dict, msg):
 
 def gen_urdf(joints_dict, links_dict, inertial_dict, package_name, save_dir, robot_name):
     file_name = save_dir + '/' + robot_name + '.urdf'  # the name of urdf file
-    repo = package_name + '/bin_stl/'  # the repository of binary stl files
+    repo = package_name + '/' + robot_name + '/bin_stl/'  # the repository of binary stl files
     print(repo)
     with open(file_name, mode='w') as f:
         f.write('<?xml version="1.0" ?>\n')
@@ -252,7 +252,11 @@ def run(context):
         if save_dir == False:
             ui.messageBox('Fusion2URDF was canceled', title)
             return 0
-
+        
+        save_dir = save_dir + '/' + robot_name
+        try: os.mkdir(save_dir)
+        except: pass
+    
         # Generate STl files
         export_stl(design, save_dir, components)        
         
