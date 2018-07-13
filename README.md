@@ -1,7 +1,9 @@
 # fusion2urdf
 
-### Under Development
+This is a fusion 360 script to export urdf from fusion 360 directly.
 
-This repository shows how to create urdf from fusion 360 efficiently.
+### How to use
+
+
 
 **convertSTL.rb** was created by [@Chris Polis](https://github.com/cmpolis/convertSTL#author)
