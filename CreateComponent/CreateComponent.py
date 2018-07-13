@@ -10,6 +10,8 @@ def copy_body(allOccs, old_comp):
     transform = adsk.core.Matrix3D.create()    
     occs = allOccs.addNewComponent(transform)  # this create new occs
     old_comp.name, occs.component.name = occs.component.name, old_comp.name  #swap the name
+    old_comp.name = 'old_component'
+    
     occs = allOccs[-1]
     for i in range(bodies.count):
         body = bodies.item(i)
@@ -21,7 +23,7 @@ def copy_component(components, allOccs, root):
     coppied = []
     for component in components:
         name = component.name
-        if component == root or ('Component' in name) or (name in coppied):
+        if component == root or ('old_component' in name) or (name in coppied):
             continue
         if component.bRepBodies.count > 0:
             copy_body(allOccs, component)
