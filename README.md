@@ -9,7 +9,7 @@ This is a fusion 360 script to export urdf from fusion 360 directly.
 As an example, I'll export a urdf file from this cool fusion360 robot-arm model(https://grabcad.com/library/industrial-robot-10).
 This was created by [sanket patil](https://grabcad.com/sanket.patil-16)
 
-#### At Fusion 360
+#### In Fusion 360
 
 At first, we have to install this script. Download this repository and unzip at anywhere you like. The "URDF_Exporter" in this repository is the folder containing the fusion2urdf script.
 
@@ -47,7 +47,7 @@ You have successfully exported the urdf file. Also, you got stl files in "Deskto
 The folder "Desktop/test" will be required in the next step. Move them into your ros environment.
 
 
-#### At your ROS environment
+#### In your ROS environment
 
 Place this repository at your own ROS workspace. "catkin_ws" is used in this example.
 Then, run catkin_make in catkin_ws.
