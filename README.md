@@ -19,7 +19,7 @@ Copy and paste URDF_Exporter at the repository where your fusion scripts locate.
 
 Then, click ADD-INS in fusion 360. Click the green plus button and choose URDF_Exporter. 
 
-![install](https://github.com/syuntoku14/fusion2urdf/blob/images/install_script.PNG)
+<img src="attach:https://github.com/syuntoku14/fusion2urdf/blob/images/install_script.PNG" alt="attach:install" title="attach:install" width="200" height="200">
 
 This script change your model. So before run it, copy your model to backup.
 
