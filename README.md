@@ -9,9 +9,20 @@ This was created by [sanket patil](https://grabcad.com/sanket.patil-16)
 
 #### At Fusion 360
 
-At first, download this repository and unzip at anywhere you like. The "URDF_Exporter" in this repository is the script to install into your fusion 360.
+At first, we have to install this script. Download this repository and unzip at anywhere you like. The "URDF_Exporter" in this repository is the folder containing the fusion2urdf script.
 
-Copy and paste URDF_Exporter at the repository where your fusion scripts locate. In windows, it is usually at 'C:\Users\username\AppData\Roaming\Autodesk\Autodesk Fusion 360\API\Scripts'
+Copy and paste URDF_Exporter at the repository where your fusion scripts locate. In windows, it is usually at 
+
+'''bash
+'C:\Users\username\AppData\Roaming\Autodesk\Autodesk Fusion 360\API\Scripts'
+'''
+
+Then, click ADD-INS in fusion 360. Click the green plus button and choose URDF_Exporter. 
+
+This script change your model. So before run it, copy your model to backup.
+
+Run the script. Then a folder dialog will show up. Choose where you want to save the urdf.
+Maybe some error will occur when you run the script. Fix them according to the instruction. In this case, something wrong with joint "Rev 7". Probably it can be solved just redefine the joint.
 
 
 
