@@ -30,7 +30,13 @@ Maybe some error will occur when you run the script. Fix them according to the i
 
 ![error](https://github.com/syuntoku14/fusion2urdf/blob/images/error.png)
 
-The name of components con't contain any spaces. Also, you must define the base component. Rename the base component as "base_link".
+The name of components con't contain any spaces. Also, you must define the base component. Rename the base component as "base_link". 
+
+![cautions](https://github.com/syuntoku14/fusion2urdf/blob/images/cautions.PNG)
+
+In the above image, base_link is gounded. Right click it and click "Unground". 
+
+Now you can run the script. Let's run the script. Choose the folder to save and wait a few second. You will see many "old_component" the components field but please ignore them. 
 
 
 
