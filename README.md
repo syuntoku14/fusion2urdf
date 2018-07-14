@@ -55,8 +55,28 @@ cd ~/catkin_ws/src
 git clone git@github.com:syuntoku14/fusion2urdf.git
 cd ..
 catkin_make
+source devel/setup.bash
 ```
 
+Next, copy the repository named your robot's name that you made in the previous step and paste it at "~/catkin_ws/src/fusion2urdf". In this example, I copied "industrial_robot" which is located in the "test" folder.  
+
+Then, run ths "stl2binary.bash" with your robot's name. 
+
+```bash
+cd ~/catkin_ws/src/fusion2urdf
+bash stl2binary.bash industrial_robot
+```
+
+The bin_stl in your robot's name folder contains binary stl files for urdf \<mesh\> tags.
+
+Now you can see your robot in rviz. You can see it by the following command.
+
+```bash
+cd ~/catkin_ws/src/fusion2urdf/industrial_robot
+roslaunch urdf_tutorial display.launch model:=industrial_robot.urdf
+```
+
+Enjoy your Fusion 360 and ROS life!
 
 
 **convertSTL.rb** was created by [@Chris Polis](https://github.com/cmpolis/convertSTL#author)
