@@ -25,7 +25,7 @@ This script change your model. So before run it, copy your model to backup.
 
 ![copy](https://github.com/syuntoku14/fusion2urdf/blob/images/copy.png)
 
-Run the script. Then a folder dialog will show up. Choose where you want to save the urdf.
+Run the script. Then a folder dialog will show up. Choose where you want to save the urdf(A folder "Desktop/test" is chosen in this example").
 Maybe some error will occur when you run the script. Fix them according to the instruction. In this case, something wrong with joint "Rev 7". Probably it can be solved just redefine the joint.
 
 ![error](https://github.com/syuntoku14/fusion2urdf/blob/images/error.png)
@@ -38,6 +38,11 @@ In the above image, base_link is gounded. Right click it and click "Unground".
 
 Now you can run the script. Let's run the script. Choose the folder to save and wait a few second. You will see many "old_component" the components field but please ignore them. 
 
+![results](https://github.com/syuntoku14/fusion2urdf/blob/images/result.PNG)
+
+You have successfully exported the urdf file. Also, you got stl files in "Desktop/test/mm_stl" repository. This will be required at the next step. The existing fusion CAD file is no more needed. You can delete it. 
+
+The folder "Desktop/test" will be required in the next step. Move them into your ros environment.
 
 
 #### At your ROS environment
@@ -51,5 +56,7 @@ git clone git@github.com:syuntoku14/fusion2urdf.git
 cd ..
 catkin_make
 ```
+
+
 
 **convertSTL.rb** was created by [@Chris Polis](https://github.com/cmpolis/convertSTL#author)
