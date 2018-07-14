@@ -60,7 +60,9 @@ source devel/setup.bash
 
 Next, copy the repository named your robot's name that you made in the previous step and paste it at "~/catkin_ws/src/fusion2urdf". In this example, I copied "industrial_robot" which is located in the "test" folder.  
 
-Then, run ths "stl2binary.bash" with your robot's name. 
+<img src="https://github.com/syuntoku14/fusion2urdf/blob/images/fusion2urdf.png" alt="folder" title="folder" width="300" height="300">
+
+Then, run the "stl2binary.bash" with your robot's name. 
 
 ```bash
 cd ~/catkin_ws/src/fusion2urdf
@@ -75,6 +77,8 @@ Now you can see your robot in rviz. You can see it by the following command.
 cd ~/catkin_ws/src/fusion2urdf/industrial_robot
 roslaunch urdf_tutorial display.launch model:=industrial_robot.urdf
 ```
+
+<img src="https://github.com/syuntoku14/fusion2urdf/blob/images/rviz_robot.png" alt="rviz" title="rviz" width="300" height="300">
 
 Enjoy your Fusion 360 and ROS life!
 
