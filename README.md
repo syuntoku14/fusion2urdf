@@ -30,7 +30,7 @@ This script will change your model. So before run it, copy your model to backup.
 <img src="https://github.com/syuntoku14/fusion2urdf/blob/images/copy.png" alt="copy" title="copy" width="300" height="300">
 
 Run the script. Then a folder dialog will show up. Choose where you want to save the urdf(A folder "Desktop/test" is chosen in this example").
-Maybe some error will occur when you run the script. Fix them according to the instruction. In this case, something wrong with joint "Rev 7". Probably it can be solved just redefine the joint.
+Maybe some error will occur when you run the script. Fix them according to the instruction. In this case, something wrong with joint "Rev 7". Probably it can be solved by just redefining the joint.
 
 ![error](https://github.com/syuntoku14/fusion2urdf/blob/images/error.png)
 
