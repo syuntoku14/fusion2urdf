@@ -48,7 +48,7 @@ The folder "Desktop/test" will be required in the next step. Move them into your
 #### At your ROS environment
 
 Place this repository at your own ROS workspace. "catkin_ws" is used in this example.
-Then, run catkin_make in catkin_make.
+Then, run catkin_make in catkin_ws.
 
 ```bash
 cd ~/catkin_ws/src
