@@ -2,6 +2,8 @@
 
 This is a fusion 360 script to export urdf from fusion 360 directly.
 
+**convertSTL.rb** was created by [@Chris Polis](https://github.com/cmpolis/convertSTL#author)
+
 ## How to use
 
 As an example, I'll export a urdf file from this cool fusion360 robot-arm model(https://grabcad.com/library/industrial-robot-10).
@@ -80,7 +82,4 @@ roslaunch urdf_tutorial display.launch model:=industrial_robot.urdf
 
 <img src="https://github.com/syuntoku14/fusion2urdf/blob/images/rviz_robot.png" alt="rviz" title="rviz" width="300" height="300">
 
-Enjoy your Fusion 360 and ROS life!
-
-
-**convertSTL.rb** was created by [@Chris Polis](https://github.com/cmpolis/convertSTL#author)
+**Enjoy your Fusion 360 and ROS life!**
