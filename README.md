@@ -13,9 +13,9 @@ At first, we have to install this script. Download this repository and unzip at 
 
 Copy and paste URDF_Exporter at the repository where your fusion scripts locate. In windows, it is usually at 
 
-'''bash
+```bash
 'C:\Users\username\AppData\Roaming\Autodesk\Autodesk Fusion 360\API\Scripts'
-'''
+```
 
 Then, click ADD-INS in fusion 360. Click the green plus button and choose URDF_Exporter. 
 
