@@ -12,20 +12,27 @@ As an example, I'll export a urdf file from this cool fusion360 robot-arm model(
 This was created by [sanket patil](https://grabcad.com/sanket.patil-16)
 
 #### In Fusion 360
+##### Install
 
-At first, we have to install this script. Download this repository and unzip at anywhere you like. The "URDF_Exporter" in this repository is the folder containing the fusion2urdf script.
+Run the following command in your shell.
 
-Copy and paste URDF_Exporter at the repository where your fusion scripts locate. In windows, it is usually at 
+###### Windows (In PowerShell)
 
-```bash
-'C:\Users\username\AppData\Roaming\Autodesk\Autodesk Fusion 360\API\Scripts'
+```powershell
+mkdir "${env:APPDATA}\Autodesk\Autodesk Fusion 360\API\Scripts\URDF_Exporter"; cd "${env:APPDATA}\Autodesk\Autodesk Fusion 360\API\Scripts\URDF_Exporter"; function Cmd-Curl {cmd /c curl $args}; Set-Alias -Name curl -Value Cmd-Curl -Option AllScope; curl https://raw.githubusercontent.com/syuntoku14/fusion2urdf/master/URDF_Exporter/URDF_Exporter.py -o URDF_Exporter.py; curl https://raw.githubusercontent.com/syuntoku14/fusion2urdf/master/URDF_Exporter/URDF_Exporter.manifest -o URDF_Exporter.manifest
 ```
 
-Then, click ADD-INS in fusion 360. Click the green plus button and choose URDF_Exporter. 
+###### macOS (In Bash)
 
-<img src="https://github.com/syuntoku14/fusion2urdf/blob/images/install_script.PNG" alt="install" title="install" width="300" height="300">
+```bash
+mkdir "$HOME/Library/Application Support/Autodesk/Autodesk Fusion 360/API/Scripts/URDF_Exporter" && cd "$HOME/Library/Application Support/Autodesk/Autodesk Fusion 360/API/Scripts/URDF_Exporter" && curl https://raw.githubusercontent.com/syuntoku14/fusion2urdf/master/URDF_Exporter/URDF_Exporter.py -o URDF_Exporter.py && curl https://raw.githubusercontent.com/syuntoku14/fusion2urdf/master/URDF_Exporter/URDF_Exporter.manifest -o URDF_Exporter.manifest
+```
 
-This script will change your model. So before run it, copy your model to backup.
+##### Run
+
+Click ADD-INS in fusion 360, then choose URDF_Exporter. 
+
+**This script will change your model. So before run it, copy your model to backup.**
 
 <img src="https://github.com/syuntoku14/fusion2urdf/blob/images/copy.png" alt="copy" title="copy" width="300" height="300">
 
