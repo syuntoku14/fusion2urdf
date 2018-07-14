@@ -23,7 +23,7 @@ Then, click ADD-INS in fusion 360. Click the green plus button and choose URDF_E
 
 <img src="https://github.com/syuntoku14/fusion2urdf/blob/images/install_script.PNG" alt="install" title="install" width="300" height="300">
 
-This script change your model. So before run it, copy your model to backup.
+This script will change your model. So before run it, copy your model to backup.
 
 <img src="https://github.com/syuntoku14/fusion2urdf/blob/images/copy.png" alt="copy" title="copy" width="300" height="300">
 
