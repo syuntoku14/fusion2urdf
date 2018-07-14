@@ -239,14 +239,21 @@ def export_stl(design, save_dir, components):
         scriptDir = save_dir + '/mm_stl'  
         # export the occurrence one by one in the component to a specified file
         for component in components:
-            allOccu = component.allOccurrences
-            for occ in allOccu:
-                fileName = scriptDir + "/" + occ.component.name              
-                # create stl exportOptions
-                stlExportOptions = exportMgr.createSTLExportOptions(occ, fileName, )
-                stlExportOptions.sendToPrintUtility = False
-                stlExportOptions.isBinaryFormat = False
-                exportMgr.execute(stlExportOptions)
+            if 'old' in component.name:
+                continue
+            allOccus = component.allOccurrences
+            for occ in allOccus:
+                try:
+                    print(occ.component.name)
+                    fileName = scriptDir + "/" + occ.component.name              
+                    # create stl exportOptions
+                    stlExportOptions = exportMgr.createSTLExportOptions(occ, fileName)
+                    stlExportOptions.sendToPrintUtility = False
+                    stlExportOptions.isBinaryFormat = False
+                    exportMgr.execute(stlExportOptions)
+                except:
+                    print('Component ' + occ.component.name + 'has something wrong.')
+                    
 
 
 def run(context):

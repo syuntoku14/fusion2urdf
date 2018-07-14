@@ -6,6 +6,13 @@ Currenty, this script supports only revolute joints. Let me know if your model h
 
 **convertSTL.rb** was created by [@Chris Polis](https://github.com/cmpolis/convertSTL#author)
 
+## Before using this script
+
+Before using this script, make sure that your model consists of only components. Also, your components must have only one occurence. For example, the following model(https://grabcad.com/library/spotmini-robot-1) is not supported unless you fix them. The base_link doesn't exist and some components have two occurences(For instance, Component1 has two occurences Commponent1:1 and Component1:2). I'll fix these issues someday.
+
+<img src="https://github.com/syuntoku14/fusion2urdf/blob/images/spot_mini.PNG" alt="spot_mini" title="spot_mini" width="300" height="300">
+
+
 ## How to use
 
 As an example, I'll export a urdf file from this cool fusion360 robot-arm model(https://grabcad.com/library/industrial-robot-10).
