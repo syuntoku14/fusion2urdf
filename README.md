@@ -19,11 +19,11 @@ Copy and paste URDF_Exporter at the repository where your fusion scripts locate.
 
 Then, click ADD-INS in fusion 360. Click the green plus button and choose URDF_Exporter. 
 
-![install](https://github.com/syuntoku14/fusion2urdf/blob/images/install_script.PNG =x200)
+![install](https://github.com/syuntoku14/fusion2urdf/blob/images/install_script.PNG =200x200)
 
 This script change your model. So before run it, copy your model to backup.
 
-![copy](https://github.com/syuntoku14/fusion2urdf/blob/images/copy.png =x200)
+![copy](https://github.com/syuntoku14/fusion2urdf/blob/images/copy.png =200x200)
 
 Run the script. Then a folder dialog will show up. Choose where you want to save the urdf.
 Maybe some error will occur when you run the script. Fix them according to the instruction. In this case, something wrong with joint "Rev 7". Probably it can be solved just redefine the joint.
