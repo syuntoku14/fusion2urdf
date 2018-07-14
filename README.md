@@ -9,6 +9,12 @@ This was created by [sanket patil](https://grabcad.com/sanket.patil-16)
 
 #### At Fusion 360
 
+At first, download this repository and unzip at anywhere you like. The "URDF_Exporter" in this repository is the script to install into your fusion 360.
+
+Copy and paste URDF_Exporter at the repository where your fusion scripts locate. In windows, it is usually at 'C:\Users\username\AppData\Roaming\Autodesk\Autodesk Fusion 360\API\Scripts'
+
+
+
 #### At your ROS environment
 
 Place this repository at your own ROS workspace. "catkin_ws" is used in this example.
