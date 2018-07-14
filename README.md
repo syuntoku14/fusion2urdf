@@ -60,7 +60,7 @@ source devel/setup.bash
 
 Next, copy the repository named your robot's name that you made in the previous step and paste it at "~/catkin_ws/src/fusion2urdf". In this example, I copied "industrial_robot" which is located in the "test" folder.  
 
-<img src="https://github.com/syuntoku14/fusion2urdf/blob/images/fusion2urdf.png" alt="folder" title="folder" width="300" height="300">
+<img src="https://github.com/syuntoku14/fusion2urdf/blob/images/fusion2urdf.png" alt="folder" title="folder" width="300" height="150">
 
 Then, run the "stl2binary.bash" with your robot's name. 
 
