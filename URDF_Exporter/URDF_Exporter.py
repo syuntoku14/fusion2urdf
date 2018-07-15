@@ -8,7 +8,6 @@ from xml.etree.ElementTree import Element, SubElement, Comment, tostring
 from xml.dom import minidom
 
 # length unit is 'cm' and inertial unit is 'kg/cm^2'
-# If there is no 'body' in the root component, maybe the corrdinates are wrong.
 
 def prettify(elem):
     """Return a pretty-printed XML string for the Element.
@@ -128,7 +127,7 @@ def joint_gen(dct, repo, link_dict, file_name):
             parent = dct[j]['parent']
             child = dct[j]['child']
             xyz = [round(p-c, 6) for p, c in \
-                zip(link_dict[parent], link_dict[child])]  # xyz = parent - child
+                zip(link_dict[parent], link_dict[child])]  # xyz = paret - child
             joint = Joint(name=j, xyz=xyz, axis=dct[j]['axis'],\
                 parent=parent, child=child)
             joint.gen_joint_xml()
@@ -180,7 +179,7 @@ def set_inertial_dict(root, components, inertial_dict, msg):
 
 def gen_urdf(joints_dict, links_dict, inertial_dict, package_name, save_dir, robot_name):
     file_name = save_dir + '/' + robot_name + '.urdf'  # the name of urdf file
-    repo = package_name + '/' + robot_name + '/bin_stl/'  # the repository of binary stl files
+    repo = package_name + '/bin_stl/'  # the repository of binary stl files
     print(repo)
     with open(file_name, mode='w') as f:
         f.write('<?xml version="1.0" ?>\n')
@@ -205,55 +204,27 @@ def file_dialog(ui):
         return False
         
 
-def copy_body(allOccs, old_comp):
-    bodies = old_comp.bRepBodies
-    transform = adsk.core.Matrix3D.create()    
-    occs = allOccs.addNewComponent(transform)  # this create new occs
-    old_comp.name, occs.component.name = occs.component.name, old_comp.name  #swap the name
-    old_comp.name = 'old_component'
-    occs = allOccs[-1]
-    for i in range(bodies.count):
-        body = bodies.item(i)
-        body.copyToComponent(occs)
-    
-
-def copy_component(components, allOccs, root):    
-    # duplicate all the components
-    coppied = []
-    for component in components:
-        name = component.name
-        if component == root or ('old_component' in name) or (name in coppied):
-            continue
-        if component.bRepBodies.count > 0:
-            copy_body(allOccs, component)
-            coppied.append(name)
-    #print(coppied)
-
-
 def export_stl(design, save_dir, components):
         # create a single exportManager instance
         exportMgr = design.exportManager
+        
         # get the script location
         try: os.mkdir(save_dir + '/mm_stl')
         except: pass
+    
         scriptDir = save_dir + '/mm_stl'  
+        
         # export the occurrence one by one in the component to a specified file
         for component in components:
-            if 'old' in component.name:
-                continue
-            allOccus = component.allOccurrences
-            for occ in allOccus:
-                try:
-                    print(occ.component.name)
-                    fileName = scriptDir + "/" + occ.component.name              
-                    # create stl exportOptions
-                    stlExportOptions = exportMgr.createSTLExportOptions(occ, fileName)
-                    stlExportOptions.sendToPrintUtility = False
-                    stlExportOptions.isBinaryFormat = False
-                    exportMgr.execute(stlExportOptions)
-                except:
-                    print('Component ' + occ.component.name + 'has something wrong.')
-                    
+            allOccu = component.allOccurrences
+            for occ in allOccu:
+                fileName = scriptDir + "/" + occ.component.name
+                
+                # create stl exportOptions
+                stlExportOptions = exportMgr.createSTLExportOptions(occ, fileName, )
+                stlExportOptions.sendToPrintUtility = False
+                stlExportOptions.isBinaryFormat = False
+                exportMgr.execute(stlExportOptions)
 
 
 def run(context):
@@ -272,20 +243,18 @@ def run(context):
             return
         
         components = design.allComponents
-        root = design.rootComponent  # root component        
-        allOccs = root.occurrences
-
-        # set the names        
+        root = design.rootComponent  # root component
         package_name = 'fusion2urdf'
+        
+        # set the names        
         robot_name = root.name.split()[0]
         save_dir = file_dialog(ui)
         if save_dir == False:
             ui.messageBox('Fusion2URDF was canceled', title)
             return 0
-        
-        save_dir = save_dir + '/' + robot_name
-        try: os.mkdir(save_dir)
-        except: pass     
+
+        # Generate STl files
+        export_stl(design, save_dir, components)        
         
         # Generate URDF
         # Get joint information. All joints are related to root. 
@@ -308,11 +277,6 @@ def run(context):
         
         links_dict = {}
         gen_urdf(joints_dict, links_dict, inertial_dict, package_name, save_dir, robot_name)
-
-        # Generate STl files        
-        copy_component(components, allOccs, root)
-        export_stl(design, save_dir, components)   
-        
         ui.messageBox(msg, title)
         
     except:
