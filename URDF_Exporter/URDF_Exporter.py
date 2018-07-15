@@ -8,6 +8,7 @@ from xml.etree.ElementTree import Element, SubElement, Comment, tostring
 from xml.dom import minidom
 
 # length unit is 'cm' and inertial unit is 'kg/cm^2'
+# If there is no 'body' in the root component, maybe the corrdinates are wrong.
 
 def prettify(elem):
     """Return a pretty-printed XML string for the Element.
@@ -91,7 +92,26 @@ def link_gen(dct, repo, link_dict, file_name, inertial_dict):
             f.write(link.xml)
             link_dict[link.name] = link.xyz
        
-       
+def set_inertial_dict(root, inertial_dict, msg):
+    # Get component properties.      
+    allOccs = root.occurrences
+    for occs in allOccs:
+        # Skip the root component.
+        occs_dict = {}
+        prop = occs.getPhysicalProperties(adsk.fusion.CalculationAccuracy.HighCalculationAccuracy)
+        occs_dict['mass'] = round(prop.mass, 6)  #kg
+        occs_dict['inertia'] = [round(i / 10000.0, 6) for i in \
+        prop.getXYZMomentsOfInertia()[1:]]  #kg m^2
+        if occs.component.name == 'base_link':
+            inertial_dict['base_link'] = occs_dict
+        else:
+            inertial_dict[occs.name.replace(':', '__')] = occs_dict
+        if ' ' in occs.name or '(' in occs.name or ')' in occs.name:
+            msg = 'A space or parenthesis are detected in the name of ' + occs.name + '. Please remove them and run again.'
+            break
+    return msg
+
+
 class Joint:
     def __init__(self, name, xyz, axis, parent, child, type_='continuous'):
         self.name = name
@@ -127,7 +147,7 @@ def joint_gen(dct, repo, link_dict, file_name):
             parent = dct[j]['parent']
             child = dct[j]['child']
             xyz = [round(p-c, 6) for p, c in \
-                zip(link_dict[parent], link_dict[child])]  # xyz = paret - child
+                zip(link_dict[parent], link_dict[child])]  # xyz = parent - child
             joint = Joint(name=j, xyz=xyz, axis=dct[j]['axis'],\
                 parent=parent, child=child)
             joint.gen_joint_xml()
@@ -140,8 +160,12 @@ def set_joints_dict(root, joints_dict, msg):
 
         joint_dict['axis'] = [round(i / 100.0, 6) for i in \
             joint.jointMotion.rotationAxisVector.asArray()]  # converted to meter
-        joint_dict['parent'] = joint.occurrenceTwo.name[:-2]
-        joint_dict['child'] = joint.occurrenceOne.name[:-2]
+        if joint.occurrenceTwo.component.name == 'base_link':
+            joint_dict['parent'] = 'base_link'
+        else:
+            joint_dict['parent'] = joint.occurrenceTwo.name.replace(':', '__')
+        joint_dict['child'] = joint.occurrenceOne.name.replace(':', '__')
+        
         try:
             joint_dict['xyz'] = [round(i / 100.0, 6) for i in \
             joint.geometryOrOriginOne.origin.asArray()]  # converted to meter
@@ -150,36 +174,18 @@ def set_joints_dict(root, joints_dict, msg):
                 joint_dict['xyz'] = [round(i / 100.0, 6) for i in \
                 joint.geometryOrOriginTwo.origin.asArray()]  # converted to meter
             except:
-                msg = joint.name + " doesn't have joint origin. Please set it and run Again."
+                msg = joint.name + " doesn't have joint origin. Please set it and run again."
                 break
-        if ' ' in joint.name:
-            msg = 'A space is detected in the name of ' + joint.name + '. Please remove spaces and run again.'
+        if ' ' in joint.name or '(' in joint.name or ')' in joint.name:
+            msg = 'A space or parenthesis are detected in the name of ' + joint.name + '. Please remove spaces and run again.'
             break
         joints_dict[joint.name] = joint_dict
     return msg
 
 
-def set_inertial_dict(root, components, inertial_dict, msg):
-    # Get component properties.            
-    for component in components:
-        # Skip the root component.
-        component_dict = {}
-        if root == component:
-            continue
-        prop = component.getPhysicalProperties(adsk.fusion.CalculationAccuracy.HighCalculationAccuracy);
-        component_dict['mass'] = round(prop.mass, 6)  #kg
-        component_dict['inertia'] = [round(i / 10000.0, 6) for i in \
-        prop.getXYZMomentsOfInertia()[1:]]  #kg m^2
-        inertial_dict[component.name] = component_dict
-        if ' ' in component.name:
-            msg = 'A space is detected in the name of ' + component.name + '. Please remove spaces and run again.'
-            break
-    return msg
-
-
 def gen_urdf(joints_dict, links_dict, inertial_dict, package_name, save_dir, robot_name):
     file_name = save_dir + '/' + robot_name + '.urdf'  # the name of urdf file
-    repo = package_name + '/bin_stl/'  # the repository of binary stl files
+    repo = package_name + '/' + robot_name + '/bin_stl/'  # the repository of binary stl files
     print(repo)
     with open(file_name, mode='w') as f:
         f.write('<?xml version="1.0" ?>\n')
@@ -204,27 +210,65 @@ def file_dialog(ui):
         return False
         
 
+def copy_body(allOccs, old_occs):
+    # copy the old occs to new component
+    bodies = old_occs.bRepBodies
+    transform = adsk.core.Matrix3D.create()
+    old_component_name = old_occs.component.name
+    
+    # Create new components from occs
+    # This support even when a component has some occses. 
+    same_occs = []  
+    for occs in allOccs:
+        if occs.component.name == old_component_name:
+            same_occs.append(occs)
+    for occs in same_occs:
+        new_occs = allOccs.addNewComponent(transform)  # this create new occs
+        if occs.component.name == 'base_link':
+            old_occs.component.name = 'old_component'
+            new_occs.component.name = 'base_link'
+        else:
+            new_occs.component.name = occs.name.replace(':', '__')
+        new_occs = allOccs[-1]
+        for i in range(bodies.count):
+            body = bodies.item(i)
+            body.copyToComponent(new_occs)
+    old_occs.component.name = 'old_component'
+
+
+def copy_occs(root):    
+    # duplicate all the components
+    allOccs = root.occurrences
+    coppy_list = [occs for occs in allOccs]
+    for occs in coppy_list:
+        if occs.bRepBodies.count > 0:
+            copy_body(allOccs, occs)
+
+
 def export_stl(design, save_dir, components):
         # create a single exportManager instance
         exportMgr = design.exportManager
-        
         # get the script location
         try: os.mkdir(save_dir + '/mm_stl')
         except: pass
-    
         scriptDir = save_dir + '/mm_stl'  
-        
         # export the occurrence one by one in the component to a specified file
         for component in components:
-            allOccu = component.allOccurrences
-            for occ in allOccu:
-                fileName = scriptDir + "/" + occ.component.name
-                
-                # create stl exportOptions
-                stlExportOptions = exportMgr.createSTLExportOptions(occ, fileName, )
-                stlExportOptions.sendToPrintUtility = False
-                stlExportOptions.isBinaryFormat = False
-                exportMgr.execute(stlExportOptions)
+            if 'old' in component.name:
+                continue
+            allOccus = component.allOccurrences
+            for occ in allOccus:
+                try:
+                    print(occ.component.name)
+                    fileName = scriptDir + "/" + occ.component.name              
+                    # create stl exportOptions
+                    stlExportOptions = exportMgr.createSTLExportOptions(occ, fileName)
+                    stlExportOptions.sendToPrintUtility = False
+                    stlExportOptions.isBinaryFormat = False
+                    exportMgr.execute(stlExportOptions)
+                except:
+                    print('Component ' + occ.component.name + 'has something wrong.')
+                    
 
 
 def run(context):
@@ -241,20 +285,21 @@ def run(context):
         if not design:
             ui.messageBox('No active Fusion design', title)
             return
-        
+
+        root = design.rootComponent  # root component 
         components = design.allComponents
-        root = design.rootComponent  # root component
-        package_name = 'fusion2urdf'
-        
+
         # set the names        
+        package_name = 'fusion2urdf'
         robot_name = root.name.split()[0]
         save_dir = file_dialog(ui)
         if save_dir == False:
             ui.messageBox('Fusion2URDF was canceled', title)
             return 0
-
-        # Generate STl files
-        export_stl(design, save_dir, components)        
+        
+        save_dir = save_dir + '/' + robot_name
+        try: os.mkdir(save_dir)
+        except: pass     
         
         # Generate URDF
         # Get joint information. All joints are related to root. 
@@ -263,10 +308,10 @@ def run(context):
         if msg != success_msg:
             ui.messageBox(msg, title)
             return 0
-            
+        print('joint_ok')    
         # Get inertial information.
         inertial_dict = {}
-        msg = set_inertial_dict(root, components, inertial_dict, msg)
+        msg = set_inertial_dict(root, inertial_dict, msg)
         if msg != success_msg:
             ui.messageBox(msg, title)
             return 0
@@ -274,9 +319,15 @@ def run(context):
             msg = 'There is no base_link. Please set base_link and run again.'
             ui.messageBox(msg, title)
             return 0
+        print('inertial_ok')
         
         links_dict = {}
         gen_urdf(joints_dict, links_dict, inertial_dict, package_name, save_dir, robot_name)
+
+        # Generate STl files        
+        copy_occs(root)
+        export_stl(design, save_dir, components)   
+        
         ui.messageBox(msg, title)
         
     except:
