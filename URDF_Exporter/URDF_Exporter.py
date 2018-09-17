@@ -11,24 +11,33 @@ from xml.dom import minidom
 # If there is no 'body' in the root component, maybe the corrdinates are wrong.
 
 def prettify(elem):
-    """Return a pretty-printed XML string for the Element.
+    """
+    Return a pretty-printed XML string for the Element.
     """
     rough_string = ElementTree.tostring(elem, 'utf-8')
     reparsed = minidom.parseString(rough_string)
     return reparsed.toprettyxml(indent="  ")
 
 
+# ---------------------------------------------
+# Class and Functions for Links
+
+
 class Link:
+    """
+    Class to manage the information of the links
+    """
     def __init__(self, name, xyz, repo, mass, inertia):
         self.name = name
         self.xyz = xyz
-        self.xml = None
+        self.link_xml = None
         self.repo = repo
         self.mass = mass
         self.inertia = inertia
         
     def gen_link_xml(self):
-        """generate the xml strings of links
+        """
+        Generate the link_xml and hold it by link_xml
         """
         self.xyz = [-_ for _ in self.xyz]  # reverse the sign of xyz
         
@@ -68,19 +77,21 @@ class Link:
         mesh_c.attrib = {'filename':'package://' + self.repo + self.name + '_m-binary.stl'}
 
         # print("\n".join(prettify(link).split("\n")[1:]))
-        self.xml = "\n".join(prettify(link).split("\n")[1:])
+        self.link_xml = "\n".join(prettify(link).split("\n")[1:])
 
 
-def link_gen(dct, repo, link_dict, file_name, inertial_dict):
-    """This generates link urdf. Link_dict will be used in joint_gen.
+def write_link_urdf(dct, repo, link_dict, file_name, inertial_dict):
+    """
+    Write link information in urdf file.
+    In this function, Link_dict is changed for write_joint_tran_urdf.
     """
     with open(file_name, mode='a') as f:
-        # about base_link
+        # for base_link
         link = Link(name='base_link', xyz=[0,0,0], repo=repo,\
             mass=inertial_dict['base_link']['mass'],
             inertia=inertial_dict['base_link']['inertia'])
         link.gen_link_xml()
-        f.write(link.xml)
+        f.write(link.link_xml)
         link_dict[link.name] = link.xyz
         # others
         for joint in dct:
@@ -89,10 +100,14 @@ def link_gen(dct, repo, link_dict, file_name, inertial_dict):
                 repo=repo, mass=inertial_dict[name]['mass'],\
                 inertia=inertial_dict[name]['inertia'])
             link.gen_link_xml()
-            f.write(link.xml)
+            f.write(link.link_xml)
             link_dict[link.name] = link.xyz
+
        
 def set_inertial_dict(root, inertial_dict, msg):
+    """
+    inertial_dict holds the information of mass and inertia.
+    """
     # Get component properties.      
     allOccs = root.occurrences
     for occs in allOccs:
@@ -111,8 +126,13 @@ def set_inertial_dict(root, inertial_dict, msg):
             break
     return msg
 
+# ---------------------------------------------
+# Class and Functions for Joints and Transmission
 
 class Joint:
+    """
+    Class to manage the information of the links
+    """
     def __init__(self, name, xyz, axis, parent, child, type_='continuous'):
         self.name = name
         self.type = type_
@@ -120,10 +140,12 @@ class Joint:
         self.parent = parent
         self.child = child
         self.axis = axis
-        self.xml = None
+        self.joint_xml = None
+        self.tran_xml = None
     
     def gen_joint_xml(self):
-        """generate the xml strings of joints
+        """
+        Generate the joint_xml and hold it by link_xml
         """
         joint = Element('joint')
         joint.attrib = {'name':self.name, 'type':self.type}
@@ -138,10 +160,41 @@ class Joint:
         axis.attrib = {'xyz':' '.join([str(_) for _ in self.axis])}
         
         # print("\n".join(prettify(joint).split("\n")[1:]))
-        self.xml = "\n".join(prettify(joint).split("\n")[1:])
+        self.joint_xml = "\n".join(prettify(joint).split("\n")[1:])
 
-
-def joint_gen(dct, repo, link_dict, file_name):
+    def gen_transmission_xml(self):
+        """
+        Generate the tran_xml and hold it by tran_xml
+        mechanicalTransmission:1
+        type: transmission interface/SimpleTransmission
+        hardwareInterface: PositionJointInterface        
+        """        
+        
+        tran = Element('transmission')
+        tran.attrib = {'name':self.name + '_tran'}
+        
+        type_ = SubElement(tran, 'type')
+        type_.text = 'transmission_interface/SimpleTransmission'
+        
+        joint = SubElement(tran, 'joint')
+        joint.attrib = {'name':self.name}
+        hardwareInterface_joint = SubElement(joint, 'hardwareInterface')
+        hardwareInterface_joint.text = 'PositionJointInterface'
+        
+        actuator = SubElement(tran, 'actuator')
+        actuator.attrib = {'name':self.name + '_actr'}
+        hardwareInterface_actr = SubElement(actuator, 'hardwareInterface')
+        hardwareInterface_actr.text = 'PositionJointInterface'
+        mechanicalReduction = SubElement(actuator, 'mechanicalReduction')
+        mechanicalReduction.text = '1'
+        
+        self.tran_xml = "\n".join(prettify(tran).split("\n")[1:])
+            
+            
+def write_joint_tran_urdf(dct, repo, link_dict, file_name):
+    """
+    Write joint and transmission information in urdf file.
+    """
     with open(file_name, mode='a') as f:
         for j in dct:
             parent = dct[j]['parent']
@@ -151,10 +204,15 @@ def joint_gen(dct, repo, link_dict, file_name):
             joint = Joint(name=j, xyz=xyz, axis=dct[j]['axis'],\
                 parent=parent, child=child)
             joint.gen_joint_xml()
-            f.write(joint.xml)
-
+            joint.gen_transmission_xml()
+            f.write(joint.joint_xml)
+            f.write(joint.tran_xml)
+        
 
 def set_joints_dict(root, joints_dict, msg):
+    """
+    joints_dict holds 'parent', 'axis' and 'xyz' information of the joints.
+    """
     for joint in root.joints:
         joint_dict = {}
 
@@ -183,7 +241,7 @@ def set_joints_dict(root, joints_dict, msg):
     return msg
 
 
-def gen_urdf(joints_dict, links_dict, inertial_dict, package_name, save_dir, robot_name):
+def write_urdf(joints_dict, links_dict, inertial_dict, package_name, save_dir, robot_name):
     file_name = save_dir + '/' + robot_name + '.urdf'  # the name of urdf file
     repo = package_name + '/' + robot_name + '/bin_stl/'  # the repository of binary stl files
     print(repo)
@@ -191,13 +249,55 @@ def gen_urdf(joints_dict, links_dict, inertial_dict, package_name, save_dir, rob
         f.write('<?xml version="1.0" ?>\n')
         f.write('<robot name="{}">\n'.format(robot_name))
 
-    link_gen(joints_dict, repo, links_dict, file_name, inertial_dict)
-    joint_gen(joints_dict, repo, links_dict, file_name)
+    write_link_urdf(joints_dict, repo, links_dict, file_name, inertial_dict)
+    write_joint_tran_urdf(joints_dict, repo, links_dict, file_name)
 
     with open(file_name, mode='a') as f:
-        f.write('</robot>')
+        # gazebo plugin
+        gazebo = Element('gazebo')
+        plugin = SubElement(gazebo, 'plugin')
+        plugin.attrib = {'name':'control', 'filename':'libgazebo_ros_control.so'}
+        gazebo_xml = "\n".join(prettify(gazebo).split("\n")[1:])
+        f.write(gazebo_xml)
+        f.write('</robot>\n')
         
+
+def write_launch(robot_name, save_dir):
+    launch = Element('launch')
+    param = SubElement(launch, 'param')
+    param.attrib = {'name':'robot_description', 'textfile':'$(find fusion2urdf)/{}/{}.urdf'.format(robot_name, robot_name)}
+    include_ =  SubElement(launch, 'include')
+    include_.attrib = {'file':'$(find gazebo_ros)/launch/empty_world.launch'}        
+    node = SubElement(launch, 'node')
+    node.attrib = {'name':'spawn_urdf', 'pkg':'gazebo_ros', 'type':'spawn_model',\
+                    'args':'-param robot_description -urdf -model {}'.format(robot_name)}
+    
+    controller_name = robot_name + '_controller'
+    rosparam = SubElement(launch, 'rosparam')
+    rosparam.attrib = {'file':'$(find fusion2urdf)/launch/' + controller_name + '.yaml',
+                       'command':'load'}
+    node_controller = SubElement(launch, 'node')
+    node_controller.attrib = {'name':'controller_spawner', 'pkg':'controller_manager', 'type':'spawner',\
+                    'args':'{}'.format(controller_name)}
+    
+    launch_xml = "\n".join(prettify(launch).split("\n")[1:])        
+    
+    file_name = save_dir + '/' + robot_name + '.launch'    
+    with open(file_name, mode='w') as f:
+        f.write(launch_xml)
         
+
+def write_yaml(robot_name, save_dir, joint_dict):
+    controller_name = robot_name + '_controller'
+    file_name = save_dir + '/' + controller_name + '.yaml'
+    with open(file_name, 'w') as f:
+        f.write(controller_name + ':\n')
+        f.write('  type: "position_controllers/JointTrajectoryController"\n')
+        f.write('  joints: \n')
+        for joint in joint_dict:
+            f.write('    - ' + joint +'\n')
+        
+
 def file_dialog(ui):     
         # Set styles of folder dialog.
         folderDlg = ui.createFolderDialog()
@@ -322,8 +422,9 @@ def run(context):
         print('inertial_ok')
         
         links_dict = {}
-        gen_urdf(joints_dict, links_dict, inertial_dict, package_name, save_dir, robot_name)
-
+        write_urdf(joints_dict, links_dict, inertial_dict, package_name, save_dir, robot_name)
+        write_launch(robot_name, save_dir)
+        write_yaml(robot_name, save_dir, joints_dict)
         # Generate STl files        
         copy_occs(root)
         export_stl(design, save_dir, components)   
