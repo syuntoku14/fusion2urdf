@@ -7,39 +7,205 @@ from xml.etree import ElementTree
 from xml.etree.ElementTree import Element, SubElement, Comment, tostring
 from xml.dom import minidom
 
+"""
 # length unit is 'cm' and inertial unit is 'kg/cm^2'
 # If there is no 'body' in the root component, maybe the corrdinates are wrong.
+"""
+
+# --------------------
+# utilities
 
 def prettify(elem):
     """
     Return a pretty-printed XML string for the Element.
+    Parameters
+    ----------
+    elem : xml.etree.ElementTree.Element
+    
+    
+    Returns
+    ----------
+    pretified xml : str
     """
     rough_string = ElementTree.tostring(elem, 'utf-8')
     reparsed = minidom.parseString(rough_string)
     return reparsed.toprettyxml(indent="  ")
 
 
-# ---------------------------------------------
+def origin2center_of_mass(inertia, center_of_mass, mass):
+    """
+    convert the moment of the inertia about the world coordinate into 
+    that about center of mass coordinate
+
+
+    Parameters
+    ----------
+    moment of inertia about the world coordinate:  [xx, yy, zz, xy, yz, xz]
+    center_of_mass: [x, y, z]
+    
+    
+    Returns
+    ----------
+    moment of inertia about center of mass : [xx, yy, zz, xy, yz, xz]
+    """
+    x = center_of_mass[0]
+    y = center_of_mass[1]
+    z = center_of_mass[2]
+    translation_matrix = [y**2+z**2, x**2+z**2, x**2+y**2,
+                         -x*y, -y*z, -x*z]
+    return [ round(i - mass*t, 6) for i, t in zip(inertia, translation_matrix)]
+
+
+def file_dialog(ui):     
+    """
+    display the dialog to save the file
+    """
+    # Set styles of folder dialog.
+    folderDlg = ui.createFolderDialog()
+    folderDlg.title = 'Fusion Folder Dialog' 
+    
+    # Show folder dialog
+    dlgResult = folderDlg.showDialog()
+    if dlgResult == adsk.core.DialogResults.DialogOK:
+        return folderDlg.folder
+    return False
+
+
+def copy_occs(root):    
+    """    
+    duplicate all the components
+    """    
+    def copy_body(allOccs, old_occs):
+        """    
+        copy the old occs to new component
+        """
+        
+        bodies = old_occs.bRepBodies
+        transform = adsk.core.Matrix3D.create()
+        old_component_name = old_occs.component.name
+        
+        # Create new components from occs
+        # This support even when a component has some occses. 
+        same_occs = []  
+        for occs in allOccs:
+            if occs.component.name == old_component_name:
+                same_occs.append(occs)
+        for occs in same_occs:
+            new_occs = allOccs.addNewComponent(transform)  # this create new occs
+            if occs.component.name == 'base_link':
+                old_occs.component.name = 'old_component'
+                new_occs.component.name = 'base_link'
+            else:
+                new_occs.component.name = occs.name.replace(':', '__')
+            new_occs = allOccs[-1]
+            for i in range(bodies.count):
+                body = bodies.item(i)
+                body.copyToComponent(new_occs)
+        old_occs.component.name = 'old_component'
+        
+    allOccs = root.occurrences
+    coppy_list = [occs for occs in allOccs]
+    for occs in coppy_list:
+        if occs.bRepBodies.count > 0:
+            copy_body(allOccs, occs)
+
+
+def export_stl(design, save_dir, components):  
+    """
+    export stl files into "sace_dir/"
+    
+    
+    Parameters
+    ----------
+    design: adsk.fusion.Design.cast(product)
+    save_dir: str
+        directory path to save
+    components: design.allComponents
+    """
+          
+    # create a single exportManager instance
+    exportMgr = design.exportManager
+    # get the script location
+    try: os.mkdir(save_dir + '/mm_stl')
+    except: pass
+    scriptDir = save_dir + '/mm_stl'  
+    # export the occurrence one by one in the component to a specified file
+    for component in components:
+        if 'old' in component.name:
+            continue
+        allOccus = component.allOccurrences
+        for occ in allOccus:
+            try:
+                print(occ.component.name)
+                fileName = scriptDir + "/" + occ.component.name              
+                # create stl exportOptions
+                stlExportOptions = exportMgr.createSTLExportOptions(occ, fileName)
+                stlExportOptions.sendToPrintUtility = False
+                stlExportOptions.isBinaryFormat = False
+                exportMgr.execute(stlExportOptions)
+            except:
+                print('Component ' + occ.component.name + 'has something wrong.')
+
+
+# --------------------
 # Class and Functions for Links
 
 
 class Link:
     """
-    Class to manage the information of the links
+    Keep and manage the information of a link
+    
+    
+    Attributes
+    ----------
+    name: str
+        name of the link
+    xyz: [x, y, z]
+        coordinate for the visual and collision
+    center_of_mass: [x, y, z]
+        coordinate for the center of mass
+    link_xml: str
+        generated xml describing about the link
+    repo: str
+        the name of the repository to save the xml file
+    mass: float
+        mass of the link
+    inertia_tensor: [ixx, iyy, izz, ixy, iyz, ixz]
+        tensor of the inertia
     """
-    def __init__(self, name, xyz, repo, mass, inertia):
+    def __init__(self, name, xyz, center_of_mass, repo, mass, inertia_tensor):
+        """
+        Parameters
+        ----------
+        name: str
+            name of the link
+        xyz: [x, y, z]
+            coordinate for the visual and collision
+        center_of_mass: [x, y, z]
+            coordinate for the center of mass
+        link_xml: str
+            generated xml describing about the link
+        repo: str
+            the name of the repository to save the xml file
+        mass: float
+            mass of the link
+        inertia_tensor: [ixx, iyy, izz, ixy, iyz, ixz]
+            tensor of the inertia
+        """
         self.name = name
-        self.xyz = xyz
+        # xyz for visual
+        self.xyz = [-_ for _ in xyz]  # reverse the sign of xyz
+        # xyz for center of mass
+        self.center_of_mass = center_of_mass
         self.link_xml = None
         self.repo = repo
         self.mass = mass
-        self.inertia = inertia
+        self.inertia_tensor = inertia_tensor
         
     def gen_link_xml(self):
         """
-        Generate the link_xml and hold it by link_xml
+        Generate the link_xml and hold it by self.link_xml
         """
-        self.xyz = [-_ for _ in self.xyz]  # reverse the sign of xyz
         
         link = Element('link')
         link.attrib = {'name':self.name}
@@ -47,14 +213,14 @@ class Link:
         #inertial
         inertial = SubElement(link, 'inertial')
         origin_i = SubElement(inertial, 'origin')
-        origin_i.attrib = {'xyz':' '.join([str(_) for _ in self.xyz]), 'rpy':'0 0 0'}       
+        origin_i.attrib = {'xyz':' '.join([str(_) for _ in self.center_of_mass]), 'rpy':'0 0 0'}       
         mass = SubElement(inertial, 'mass')
         mass.attrib = {'value':str(self.mass)}
         inertia = SubElement(inertial, 'inertia')
         inertia.attrib = \
-            {'ixx':str(self.inertia[0]), 'iyy':str(self.inertia[1]),\
-            'izz':str(self.inertia[2]), 'ixy':str(self.inertia[3]),\
-            'iyz':str(self.inertia[4]), 'ixz':str(self.inertia[5])}        
+            {'ixx':str(self.inertia_tensor[0]), 'iyy':str(self.inertia_tensor[1]),\
+            'izz':str(self.inertia_tensor[2]), 'ixy':str(self.inertia_tensor[3]),\
+            'iyz':str(self.inertia_tensor[4]), 'ixz':str(self.inertia_tensor[5])}        
         
         # visual
         visual = SubElement(link, 'visual')
@@ -79,34 +245,26 @@ class Link:
         # print("\n".join(prettify(link).split("\n")[1:]))
         self.link_xml = "\n".join(prettify(link).split("\n")[1:])
 
-
-def write_link_urdf(dct, repo, link_dict, file_name, inertial_dict):
-    """
-    Write link information in urdf file.
-    In this function, Link_dict is changed for write_joint_tran_urdf.
-    """
-    with open(file_name, mode='a') as f:
-        # for base_link
-        link = Link(name='base_link', xyz=[0,0,0], repo=repo,\
-            mass=inertial_dict['base_link']['mass'],
-            inertia=inertial_dict['base_link']['inertia'])
-        link.gen_link_xml()
-        f.write(link.link_xml)
-        link_dict[link.name] = link.xyz
-        # others
-        for joint in dct:
-            name = dct[joint]['child']
-            link = Link(name=name, xyz=dct[joint]['xyz'],\
-                repo=repo, mass=inertial_dict[name]['mass'],\
-                inertia=inertial_dict[name]['inertia'])
-            link.gen_link_xml()
-            f.write(link.link_xml)
-            link_dict[link.name] = link.xyz
-
        
 def set_inertial_dict(root, inertial_dict, msg):
     """
-    inertial_dict holds the information of mass and inertia.
+    inertial_dict holds the information of mass, inertia and center_of_mass
+    
+    
+    Parameters
+    ----------
+    root: adsk.fusion.Design.cast(product)
+        Root component
+    inertial_dict: vacant dict
+        inertial_dict will hold the information of the each inertia
+    msg: str
+        Tell the status
+        
+    
+    Returns
+    ----------
+    msg: str
+        Tell the status
     """
     # Get component properties.      
     allOccs = root.occurrences
@@ -114,9 +272,16 @@ def set_inertial_dict(root, inertial_dict, msg):
         # Skip the root component.
         occs_dict = {}
         prop = occs.getPhysicalProperties(adsk.fusion.CalculationAccuracy.HighCalculationAccuracy)
-        occs_dict['mass'] = round(prop.mass, 6)  #kg
-        occs_dict['inertia'] = [round(i / 10000.0, 6) for i in \
-        prop.getXYZMomentsOfInertia()[1:]]  #kg m^2
+        mass = round(prop.mass, 6)  #kg
+        center_of_mass = [round(_ / 100.0, 6) for _ in prop.centerOfMass.asArray()]
+        occs_dict['center_of_mass'] = center_of_mass
+        inertia_world = [i / 10000.0 for i in \
+            prop.getXYZMomentsOfInertia()[1:]]  #kg m^2
+        # xx yy zz xy xz yz(default)
+        inertia_world[4], inertia_world[5] = inertia_world[5], inertia_world[4]
+        occs_dict['mass'] = mass
+        occs_dict['inertia'] = origin2center_of_mass(inertia_world, center_of_mass, mass)  
+        
         if occs.component.name == 'base_link':
             inertial_dict['base_link'] = occs_dict
         else:
@@ -126,26 +291,46 @@ def set_inertial_dict(root, inertial_dict, msg):
             break
     return msg
 
-# ---------------------------------------------
+# --------------------
 # Class and Functions for Joints and Transmission
 
 class Joint:
     """
-    Class to manage the information of the links
+    Keep and manage the information of a joint
+    
+    
+    Attributes
+    ----------
+    name: str
+        name of the joint
+    type: str
+        type of the joint(ex: rev)
+    xyz: [x, y, z]
+        coordinate of the joint
+    axis: [x, y, z]
+        coordinate of axis of the joint
+    parent: str
+        parent link
+    child: str
+        child link
+    joint_xml: str
+        generated xml describing about the joint
+    tran_xml: str
+        generated xml describing about the transmission
     """
     def __init__(self, name, xyz, axis, parent, child, type_='continuous'):
         self.name = name
         self.type = type_
         self.xyz = xyz
+        self.axis = axis
         self.parent = parent
         self.child = child
-        self.axis = axis
         self.joint_xml = None
         self.tran_xml = None
     
     def gen_joint_xml(self):
         """
-        Generate the joint_xml and hold it by link_xml
+        Generate the joint_xml and hold it by self.joint_xml
         """
         joint = Element('joint')
         joint.attrib = {'name':self.name, 'type':self.type}
@@ -164,8 +349,12 @@ class Joint:
 
     def gen_transmission_xml(self):
         """
-        Generate the tran_xml and hold it by tran_xml
-        mechanicalTransmission:1
+        Generate the tran_xml and hold it by self.tran_xml
+        
+        
+        Notes
+        -----------
+        mechanicalTransmission: 1
         type: transmission interface/SimpleTransmission
         hardwareInterface: PositionJointInterface        
         """        
@@ -189,29 +378,27 @@ class Joint:
         mechanicalReduction.text = '1'
         
         self.tran_xml = "\n".join(prettify(tran).split("\n")[1:])
-            
-            
-def write_joint_tran_urdf(dct, repo, link_dict, file_name):
-    """
-    Write joint and transmission information in urdf file.
-    """
-    with open(file_name, mode='a') as f:
-        for j in dct:
-            parent = dct[j]['parent']
-            child = dct[j]['child']
-            xyz = [round(p-c, 6) for p, c in \
-                zip(link_dict[parent], link_dict[child])]  # xyz = parent - child
-            joint = Joint(name=j, xyz=xyz, axis=dct[j]['axis'],\
-                parent=parent, child=child)
-            joint.gen_joint_xml()
-            joint.gen_transmission_xml()
-            f.write(joint.joint_xml)
-            f.write(joint.tran_xml)
-        
+
 
 def set_joints_dict(root, joints_dict, msg):
     """
-    joints_dict holds 'parent', 'axis' and 'xyz' information of the joints.
+    joints_dict holds parent, axis and xyz informatino of the joints
+    
+    
+    Parameters
+    ----------
+    root: adsk.fusion.Design.cast(product)
+        Root component
+    joints_dict: vacant dict
+        joints_dict will hold the information of the each joints
+    msg: str
+        Tell the status
+        
+    
+    Returns
+    ----------
+    msg: str
+        Tell the status
     """
     for joint in root.joints:
         joint_dict = {}
@@ -239,19 +426,100 @@ def set_joints_dict(root, joints_dict, msg):
             break
         joints_dict[joint.name] = joint_dict
     return msg
+            
+
+# --------------------
+# Function for wrting  
+
+def write_link_urdf(joints_dict, repo, links_xyz_dict, file_name, inertial_dict):
+    """
+    Write links information into urdf "repo/file_name"
+    
+    
+    Parameters
+    ----------
+    joints_dict: dict
+        information of the each joint
+    repo: str
+        the name of the repository to save the xml file
+    links_xyz_dict: vacant dict
+        xyz information of the each link
+    file_name: str
+        urdf full path
+    inertial_dict:
+        information of the each inertial
+    
+    Note
+    ----------
+    In this function, links_xyz_dict is set for write_joint_tran_urdf.
+    The origin of the coordinate of center_of_mass is the coordinate of the link
+    """
+    with open(file_name, mode='a') as f:
+        # for base_link
+        center_of_mass = inertial_dict['base_link']['center_of_mass']
+        link = Link(name='base_link', xyz=[0,0,0], 
+            center_of_mass=center_of_mass, repo=repo,
+            mass=inertial_dict['base_link']['mass'],
+            inertia_tensor=inertial_dict['base_link']['inertia'])
+        links_xyz_dict[link.name] = link.xyz
+        link.gen_link_xml()
+        f.write(link.link_xml)
+
+        # others
+        for joint in joints_dict:
+            name = joints_dict[joint]['child']
+            center_of_mass = \
+                [ i-j for i, j in zip(inertial_dict[name]['center_of_mass'], joints_dict[joint]['xyz'])]
+            link = Link(name=name, xyz=joints_dict[joint]['xyz'],\
+                center_of_mass=center_of_mass,\
+                repo=repo, mass=inertial_dict[name]['mass'],\
+                inertia_tensor=inertial_dict[name]['inertia'])
+            links_xyz_dict[link.name] = link.xyz            
+            link.gen_link_xml()
+            f.write(link.link_xml)
 
 
-def write_urdf(joints_dict, links_dict, inertial_dict, package_name, save_dir, robot_name):
-    file_name = save_dir + '/' + robot_name + '.urdf'  # the name of urdf file
-    repo = package_name + '/' + robot_name + '/bin_stl/'  # the repository of binary stl files
-    print(repo)
-    with open(file_name, mode='w') as f:
-        f.write('<?xml version="1.0" ?>\n')
-        f.write('<robot name="{}">\n'.format(robot_name))
+def write_joint_tran_urdf(joints_dict, repo, links_xyz_dict, file_name):
+    """
+    Write joints and transmission information into urdf "repo/file_name"
+    
+    
+    Parameters
+    ----------
+    joints_dict: dict
+        information of the each joint
+    repo: str
+        the name of the repository to save the xml file
+    links_xyz_dict: dict
+        xyz information of the each link
+    file_name: str
+        urdf full path
+    """
+    
+    with open(file_name, mode='a') as f:
+        for j in joints_dict:
+            parent = joints_dict[j]['parent']
+            child = joints_dict[j]['child']
+            xyz = [round(p-c, 6) for p, c in \
+                zip(links_xyz_dict[parent], links_xyz_dict[child])]  # xyz = parent - child
+            joint = Joint(name=j, xyz=xyz, axis=joints_dict[j]['axis'],\
+                parent=parent, child=child)
+            joint.gen_joint_xml()
+            joint.gen_transmission_xml()
+            f.write(joint.joint_xml)
+            f.write(joint.tran_xml)
 
-    write_link_urdf(joints_dict, repo, links_dict, file_name, inertial_dict)
-    write_joint_tran_urdf(joints_dict, repo, links_dict, file_name)
 
+def write_gazebo_plugin_and_endtag(file_name):
+    """
+    Write about gazebo_plugin and the </robot> tag at the end of the urdf
+    
+    
+    Parameters
+    ----------
+    file_name: str
+        urdf full path
+    """
     with open(file_name, mode='a') as f:
         # gazebo plugin
         gazebo = Element('gazebo')
@@ -262,7 +530,31 @@ def write_urdf(joints_dict, links_dict, inertial_dict, package_name, save_dir, r
         f.write('</robot>\n')
         
 
+def write_urdf(joints_dict, links_xyz_dict, inertial_dict, package_name, save_dir, robot_name):
+    file_name = save_dir + '/' + robot_name + '.urdf'  # the name of urdf file
+    repo = package_name + '/' + robot_name + '/bin_stl/'  # the repository of binary stl files
+    with open(file_name, mode='w') as f:
+        f.write('<?xml version="1.0" ?>\n')
+        f.write('<robot name="{}">\n'.format(robot_name))
+
+    write_link_urdf(joints_dict, repo, links_xyz_dict, file_name, inertial_dict)
+    write_joint_tran_urdf(joints_dict, repo, links_xyz_dict, file_name)
+    write_gazebo_plugin_and_endtag(file_name)
+
+
 def write_launch(robot_name, save_dir):
+    """
+    write launch file "save_dir/robot_name.launch"
+    
+    
+    Parameter
+    ---------
+    robot_name: str
+        name of the robot
+    save_dir: str
+        path of the repository to save
+    """
+    
     launch = Element('launch')
     param = SubElement(launch, 'param')
     param.attrib = {'name':'robot_description', 'textfile':'$(find fusion2urdf)/{}/{}.urdf'.format(robot_name, robot_name)}
@@ -287,89 +579,29 @@ def write_launch(robot_name, save_dir):
         f.write(launch_xml)
         
 
-def write_yaml(robot_name, save_dir, joint_dict):
+def write_yaml(robot_name, save_dir, joints_dict):
+    """
+    write yaml file "save_dir/robot_name_controller.yaml"
+    
+    
+    Parameter
+    ---------
+    robot_name: str
+        name of the robot
+    save_dir: str
+        path of the repository to save
+    joints_dict: dict
+        information of the joints
+    """
     controller_name = robot_name + '_controller'
     file_name = save_dir + '/' + controller_name + '.yaml'
     with open(file_name, 'w') as f:
         f.write(controller_name + ':\n')
         f.write('  type: "position_controllers/JointTrajectoryController"\n')
         f.write('  joints: \n')
-        for joint in joint_dict:
+        for joint in joints_dict:
             f.write('    - ' + joint +'\n')
         
-
-def file_dialog(ui):     
-        # Set styles of folder dialog.
-        folderDlg = ui.createFolderDialog()
-        folderDlg.title = 'Fusion Folder Dialog' 
-        
-        # Show folder dialog
-        dlgResult = folderDlg.showDialog()
-        if dlgResult == adsk.core.DialogResults.DialogOK:
-            return folderDlg.folder
-        return False
-        
-
-def copy_body(allOccs, old_occs):
-    # copy the old occs to new component
-    bodies = old_occs.bRepBodies
-    transform = adsk.core.Matrix3D.create()
-    old_component_name = old_occs.component.name
-    
-    # Create new components from occs
-    # This support even when a component has some occses. 
-    same_occs = []  
-    for occs in allOccs:
-        if occs.component.name == old_component_name:
-            same_occs.append(occs)
-    for occs in same_occs:
-        new_occs = allOccs.addNewComponent(transform)  # this create new occs
-        if occs.component.name == 'base_link':
-            old_occs.component.name = 'old_component'
-            new_occs.component.name = 'base_link'
-        else:
-            new_occs.component.name = occs.name.replace(':', '__')
-        new_occs = allOccs[-1]
-        for i in range(bodies.count):
-            body = bodies.item(i)
-            body.copyToComponent(new_occs)
-    old_occs.component.name = 'old_component'
-
-
-def copy_occs(root):    
-    # duplicate all the components
-    allOccs = root.occurrences
-    coppy_list = [occs for occs in allOccs]
-    for occs in coppy_list:
-        if occs.bRepBodies.count > 0:
-            copy_body(allOccs, occs)
-
-
-def export_stl(design, save_dir, components):
-        # create a single exportManager instance
-        exportMgr = design.exportManager
-        # get the script location
-        try: os.mkdir(save_dir + '/mm_stl')
-        except: pass
-        scriptDir = save_dir + '/mm_stl'  
-        # export the occurrence one by one in the component to a specified file
-        for component in components:
-            if 'old' in component.name:
-                continue
-            allOccus = component.allOccurrences
-            for occ in allOccus:
-                try:
-                    print(occ.component.name)
-                    fileName = scriptDir + "/" + occ.component.name              
-                    # create stl exportOptions
-                    stlExportOptions = exportMgr.createSTLExportOptions(occ, fileName)
-                    stlExportOptions.sendToPrintUtility = False
-                    stlExportOptions.isBinaryFormat = False
-                    exportMgr.execute(stlExportOptions)
-                except:
-                    print('Component ' + occ.component.name + 'has something wrong.')
-                    
-
 
 def run(context):
     ui = None
@@ -377,6 +609,8 @@ def run(context):
     msg = success_msg
     
     try:
+        # --------------------
+        # initialize
         app = adsk.core.Application.get()
         ui = app.userInterface
         product = app.activeProduct
@@ -401,15 +635,18 @@ def run(context):
         try: os.mkdir(save_dir)
         except: pass     
         
-        # Generate URDF
-        # Get joint information. All joints are related to root. 
+        # --------------------
+        # set dictionaries
+        
+        # Generate joints_dict. All joints are related to root. 
         joints_dict = {}
         msg = set_joints_dict(root, joints_dict, msg)
         if msg != success_msg:
             ui.messageBox(msg, title)
             return 0
         print('joint_ok')    
-        # Get inertial information.
+        
+        # Generate inertial_dict
         inertial_dict = {}
         msg = set_inertial_dict(root, inertial_dict, msg)
         if msg != success_msg:
@@ -421,10 +658,14 @@ def run(context):
             return 0
         print('inertial_ok')
         
-        links_dict = {}
-        write_urdf(joints_dict, links_dict, inertial_dict, package_name, save_dir, robot_name)
+        links_xyz_dict = {}
+        
+        # --------------------
+        # Generate URDF
+        write_urdf(joints_dict, links_xyz_dict, inertial_dict, package_name, save_dir, robot_name)
         write_launch(robot_name, save_dir)
         write_yaml(robot_name, save_dir, joints_dict)
+        
         # Generate STl files        
         copy_occs(root)
         export_stl(design, save_dir, components)   
