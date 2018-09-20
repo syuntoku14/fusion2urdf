@@ -1,8 +1,36 @@
 # fusion2urdf
 
+### 2018/09/19 Updated!!!
+
+Fixed the bugs about the center of the mass and the inertia. 
+
+## What is this script?
 This is a fusion 360 script to export urdf from fusion 360 directly.
 
+This exportes:
+* .urdf file of your model
+* .launch and .yaml files to simulate your robot on gazebo
+* .stl files of your model
+
 **convertSTL.rb** was created by [@Chris Polis](https://github.com/cmpolis/convertSTL#author)
+
+### Sample 
+
+The following test model doesn't stand upright because z axis is not upright in default fusion 360.
+Make sure z axis is upright in your fusion 360 model if you want. 
+
+#### original model
+<img src="https://github.com/syuntoku14/fusion2urdf/blob/images/industrial_robot.png" alt="industrial_robot" title="industrial_robot" width="300" height="300">
+
+#### Gazebo simulation of exported .urdf and .launch
+* center of mass
+<img src="https://github.com/syuntoku14/fusion2urdf/blob/images/center_of_mass.png" alt="center_of_mass" title="center_of_mass" width="300" height="300">
+
+* collision
+<img src="https://github.com/syuntoku14/fusion2urdf/blob/images/collision.png" alt="collision" title="collision" width="300" height="300">
+
+* inertia
+<img src="https://github.com/syuntoku14/fusion2urdf/blob/images/inertia.png" alt="inertia" title="inertia" width="300" height="300">
 
 ## Before using this script
 
@@ -97,5 +125,16 @@ roslaunch urdf_tutorial display.launch model:=industrial_robot.urdf
 ```
 
 <img src="https://github.com/syuntoku14/fusion2urdf/blob/images/rviz_robot.png" alt="rviz" title="rviz" width="300" height="300">
+
+If you want to simulate your robot on gazebo, place exported .launch and .yaml files at ~/catkin_ws/src/fusion2urdf/launch.
+Then run "roslaunch industrial_robot.launch".
+
+```bash
+mkdir ~/catkin_ws/src/fusion2urdf/launch
+
+cp ~/catkin_ws/src/fusion2urdf/industrial_robot/industrial_robot.launch ~/catkin_ws/src/fusion2urdf/industrial_robot/industrial_robot_controller.yaml ~/catkin_ws/src/fusion2urdf/launch/
+
+roslaunch ~/catkin_ws/src/fusion2urdf/launch/industrial_robot
+```
 
 **Enjoy your Fusion 360 and ROS life!**
