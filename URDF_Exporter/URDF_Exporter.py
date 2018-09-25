@@ -12,12 +12,12 @@ from xml.dom import minidom
 # If there is no 'body' in the root component, maybe the corrdinates are wrong.
 """
 
-# should be added limits
 # joint effort: 100
 # joint velocity: 100
-# added prismatic joint
 
-# I don't know how prismatic joint acts if there is no limit
+# supports "Revolute", "Rigid" and "Slider" joint types
+
+# I'm not sure how prismatic joint acts if there is no limit in fusion model
 
 # --------------------
 # utilities
