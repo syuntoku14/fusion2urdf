@@ -12,6 +12,10 @@ from xml.dom import minidom
 # If there is no 'body' in the root component, maybe the corrdinates are wrong.
 """
 
+# should be added limits
+# joint effort: 100
+# joint velocity: 100
+
 # --------------------
 # utilities
 
@@ -318,16 +322,18 @@ class Joint:
     tran_xml: str
         generated xml describing about the transmission
     """
-    def __init__(self, name, xyz, axis, parent, child, type_='continuous'):
+    def __init__(self, name, xyz, axis, parent, child, joint_type, upper_limit, lower_limit):
         self.name = name
-        self.type = type_
+        self.type = joint_type
         self.xyz = xyz
-        self.axis = axis
         self.parent = parent
         self.child = child
         self.joint_xml = None
         self.tran_xml = None
-    
+        self.axis = axis  # for 'revolute' and 'continuous'
+        self.upper_limit = upper_limit  # for 'revolute' and 'prismatic'
+        self.lower_limit = lower_limit  # for 'revolute' and 'prismatic'
+        
     def gen_joint_xml(self):
         """
         Generate the joint_xml and hold it by self.joint_xml
@@ -341,9 +347,14 @@ class Joint:
         parent.attrib = {'link':self.parent}
         child = SubElement(joint, 'child')
         child.attrib = {'link':self.child}
-        axis = SubElement(joint, 'axis')
-        axis.attrib = {'xyz':' '.join([str(_) for _ in self.axis])}
-        
+        if self.type == 'revolute' or self.type == 'continuous':        
+            axis = SubElement(joint, 'axis')
+            axis.attrib = {'xyz':' '.join([str(_) for _ in self.axis])}
+        if self.type == 'revolute' or self.type == 'prismatic':
+            limit = SubElement(joint, 'limit')
+            limit.attrib = {'upper': str(self.upper_limit), 'lower': str(self.lower_limit),
+                            'effort': '100', 'velocity': '100'}
+            
         # print("\n".join(prettify(joint).split("\n")[1:]))
         self.joint_xml = "\n".join(prettify(joint).split("\n")[1:])
 
@@ -362,8 +373,8 @@ class Joint:
         tran = Element('transmission')
         tran.attrib = {'name':self.name + '_tran'}
         
-        type_ = SubElement(tran, 'type')
-        type_.text = 'transmission_interface/SimpleTransmission'
+        joint_type = SubElement(tran, 'type')
+        joint_type.text = 'transmission_interface/SimpleTransmission'
         
         joint = SubElement(tran, 'joint')
         joint.attrib = {'name':self.name}
@@ -400,11 +411,38 @@ def set_joints_dict(root, joints_dict, msg):
     msg: str
         Tell the status
     """
+    joint_type_list = [
+    'fixed', 'revolute', 'Slider', 'Cylinderical',
+    'PinSlot', 'Planner', 'Ball']  # these are the names in urdf
+    
     for joint in root.joints:
         joint_dict = {}
-
-        joint_dict['axis'] = [round(i / 100.0, 6) for i in \
-            joint.jointMotion.rotationAxisVector.asArray()]  # converted to meter
+        joint_type = joint_type_list[joint.jointMotion.jointType]
+        joint_dict['type'] = joint_type
+        
+        # swhich by the type of the joint
+        joint_dict['upper_limit'] = 0.0
+        joint_dict['lower_limit'] = 0.0
+        if joint_type == 'revolute':
+            joint_dict['axis'] = [round(i / 100.0, 6) for i in \
+                joint.jointMotion.rotationAxisVector.asArray()]  # converted to meter
+            max_enabled = joint.jointMotion.rotationLimits.isMaximumValueEnabled
+            min_enabled = joint.jointMotion.rotationLimits.isMinimumValueEnabled            
+            if max_enabled and min_enabled:  
+                joint_dict['upper_limit'] = round(joint.jointMotion.rotationLimits.maximumValue, 6)
+                joint_dict['lower_limit'] = round(joint.jointMotion.rotationLimits.minimumValue, 6)
+                print(joint_dict['upper_limit'], joint_dict['lower_limit'])
+            elif max_enabled and not min_enabled:
+                msg = joint.name + 'is not set its lower limit. Please set it and try again.'
+                break
+            elif not max_enabled and min_enabled:
+                msg = joint.name + 'is not set its upper limit. Please set it and try again.'
+                break
+            else:  # if there is no angle limit
+                joint_dict['type'] = 'continuous'
+        elif joint_type == 'fixed':
+            pass
+        
         if joint.occurrenceTwo.component.name == 'base_link':
             joint_dict['parent'] = 'base_link'
         else:
@@ -500,10 +538,14 @@ def write_joint_tran_urdf(joints_dict, repo, links_xyz_dict, file_name):
         for j in joints_dict:
             parent = joints_dict[j]['parent']
             child = joints_dict[j]['child']
+            joint_type = joints_dict[j]['type']
+            upper_limit = joints_dict[j]['upper_limit']
+            lower_limit = joints_dict[j]['lower_limit']
             xyz = [round(p-c, 6) for p, c in \
                 zip(links_xyz_dict[parent], links_xyz_dict[child])]  # xyz = parent - child
-            joint = Joint(name=j, xyz=xyz, axis=joints_dict[j]['axis'],\
-                parent=parent, child=child)
+            joint = Joint(name=j, joint_type = joint_type, xyz=xyz, \
+            axis=joints_dict[j]['axis'], parent=parent, child=child, \
+            upper_limit=upper_limit, lower_limit=lower_limit)
             joint.gen_joint_xml()
             joint.gen_transmission_xml()
             f.write(joint.joint_xml)
