@@ -1,8 +1,9 @@
 # fusion2urdf
 
-### 2018/09/19 Updated!!!
+### Updated!!!
 
-Fixed the bugs about the center of the mass and the inertia. 
+* 2018/09/19: Fixed the bugs about the center of the mass and the inertia. 
+* 2018/09/25: Supports joint types "Rigid", "Slider" & Supports the joints' limit(for "Revolute" and "Slider"). 
 
 ## What is this script?
 This is a fusion 360 script to export urdf from fusion 360 directly.
@@ -39,7 +40,8 @@ Before using this script, make sure that your model has all the "links" as compo
 <img src="https://github.com/syuntoku14/fusion2urdf/blob/images/spot_mini.PNG" alt="spot_mini" title="spot_mini" width="300" height="300">
 
 Sometimes this script exports abnormal urdf without any error messages. In that case, the joints should have some problems. Redefine the joints and run again.
-In addition to that, this script currentely supports only revolute joints. I will fix this problem someday.
+
+In addition to that, make sure that this script currently supports only "Rigid", "Slider" and "Revolute". I will add new joint types someday.
 
 ## How to use
 
