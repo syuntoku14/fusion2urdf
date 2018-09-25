@@ -15,6 +15,9 @@ from xml.dom import minidom
 # should be added limits
 # joint effort: 100
 # joint velocity: 100
+# added prismatic joint
+
+# I don't know how prismatic joint acts if there is no limit
 
 # --------------------
 # utilities
@@ -412,7 +415,7 @@ def set_joints_dict(root, joints_dict, msg):
         Tell the status
     """
     joint_type_list = [
-    'fixed', 'revolute', 'Slider', 'Cylinderical',
+    'fixed', 'revolute', 'prismatic', 'Cylinderical',
     'PinSlot', 'Planner', 'Ball']  # these are the names in urdf
     
     for joint in root.joints:
@@ -421,6 +424,7 @@ def set_joints_dict(root, joints_dict, msg):
         joint_dict['type'] = joint_type
         
         # swhich by the type of the joint
+        joint_dict['axis'] = [0, 0, 0]
         joint_dict['upper_limit'] = 0.0
         joint_dict['lower_limit'] = 0.0
         if joint_type == 'revolute':
@@ -431,7 +435,6 @@ def set_joints_dict(root, joints_dict, msg):
             if max_enabled and min_enabled:  
                 joint_dict['upper_limit'] = round(joint.jointMotion.rotationLimits.maximumValue, 6)
                 joint_dict['lower_limit'] = round(joint.jointMotion.rotationLimits.minimumValue, 6)
-                print(joint_dict['upper_limit'], joint_dict['lower_limit'])
             elif max_enabled and not min_enabled:
                 msg = joint.name + 'is not set its lower limit. Please set it and try again.'
                 break
@@ -440,6 +443,20 @@ def set_joints_dict(root, joints_dict, msg):
                 break
             else:  # if there is no angle limit
                 joint_dict['type'] = 'continuous'
+        elif joint_type == 'prismatic':
+            joint_dict['axis'] = [round(i / 100.0, 6) for i in \
+                joint.jointMotion.slideDirectionVector.asArray()]  # converted to meter
+            max_enabled = joint.jointMotion.slideLimits.isMaximumValueEnabled
+            min_enabled = joint.jointMotion.slideLimits.isMinimumValueEnabled            
+            if max_enabled and min_enabled:  
+                joint_dict['upper_limit'] = round(joint.jointMotion.slideLimits.maximumValue/100, 6)
+                joint_dict['lower_limit'] = round(joint.jointMotion.slideLimits.minimumValue/100, 6)
+            elif max_enabled and not min_enabled:
+                msg = joint.name + 'is not set its lower limit. Please set it and try again.'
+                break
+            elif not max_enabled and min_enabled:
+                msg = joint.name + 'is not set its upper limit. Please set it and try again.'
+                break
         elif joint_type == 'fixed':
             pass
         
