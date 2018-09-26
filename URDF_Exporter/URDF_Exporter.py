@@ -350,7 +350,7 @@ class Joint:
         parent.attrib = {'link':self.parent}
         child = SubElement(joint, 'child')
         child.attrib = {'link':self.child}
-        if self.type == 'revolute' or self.type == 'continuous':        
+        if self.type == 'revolute' or self.type == 'continuous' or self.type == 'prismatic':        
             axis = SubElement(joint, 'axis')
             axis.attrib = {'xyz':' '.join([str(_) for _ in self.axis])}
         if self.type == 'revolute' or self.type == 'prismatic':
