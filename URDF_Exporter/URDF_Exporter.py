@@ -480,6 +480,7 @@ def set_joints_dict(root, joints_dict, msg):
             msg = 'A space or parenthesis are detected in the name of ' + joint.name + '. Please remove spaces and run again.'
             break
         joints_dict[joint.name] = joint_dict
+        print(joint_dict)
     return msg
             
 
@@ -601,9 +602,9 @@ def write_urdf(joints_dict, links_xyz_dict, inertial_dict, package_name, save_di
     write_gazebo_plugin_and_endtag(file_name)
 
 
-def write_launch(robot_name, save_dir):
+def write_gazebo_launch(robot_name, save_dir):
     """
-    write launch file "save_dir/robot_name.launch"
+    write gazebo launch file "save_dir/launch/robot_name_gazebo.launch"
     
     
     Parameter
@@ -614,33 +615,41 @@ def write_launch(robot_name, save_dir):
         path of the repository to save
     """
     
+    try: os.mkdir(save_dir + '/launch')
+    except: pass     
+    
     launch = Element('launch')
     param = SubElement(launch, 'param')
     param.attrib = {'name':'robot_description', 'textfile':'$(find fusion2urdf)/{}/{}.urdf'.format(robot_name, robot_name)}
+
     include_ =  SubElement(launch, 'include')
     include_.attrib = {'file':'$(find gazebo_ros)/launch/empty_world.launch'}        
+    
+    number_of_args = 5
+    args = [None for i in range(number_of_args)]
+    args_name_value_pairs = [['paused', 'false'], ['use_sim_time', 'true'],
+                             ['gui', 'true'], ['headless', 'false'], 
+                             ['debug', 'false']]
+                             
+    for i, arg in enumerate(args):
+        arg = SubElement(include_, 'arg')
+        arg.attrib = {'name' : args_name_value_pairs[i][0] , 
+        'value' : args_name_value_pairs[i][1]}
+
     node = SubElement(launch, 'node')
     node.attrib = {'name':'spawn_urdf', 'pkg':'gazebo_ros', 'type':'spawn_model',\
                     'args':'-param robot_description -urdf -model {}'.format(robot_name)}
     
-    controller_name = robot_name + '_controller'
-    rosparam = SubElement(launch, 'rosparam')
-    rosparam.attrib = {'file':'$(find fusion2urdf)/launch/' + controller_name + '.yaml',
-                       'command':'load'}
-    node_controller = SubElement(launch, 'node')
-    node_controller.attrib = {'name':'controller_spawner', 'pkg':'controller_manager', 'type':'spawner',\
-                    'args':'{}'.format(controller_name)}
-    
     launch_xml = "\n".join(prettify(launch).split("\n")[1:])        
     
-    file_name = save_dir + '/' + robot_name + '.launch'    
+    file_name = save_dir + '/launch/' + robot_name + '_gazebo.launch'    
     with open(file_name, mode='w') as f:
         f.write(launch_xml)
-        
 
-def write_yaml(robot_name, save_dir, joints_dict):
+
+def write_control_launch(robot_name, save_dir, joints_dict):
     """
-    write yaml file "save_dir/robot_name_controller.yaml"
+    write control launch file "save_dir/launch/robot_name_control.launch"
     
     
     Parameter
@@ -652,15 +661,72 @@ def write_yaml(robot_name, save_dir, joints_dict):
     joints_dict: dict
         information of the joints
     """
+    
+    try: os.mkdir(save_dir + '/launch')
+    except: pass     
+    
+    launch = Element('launch')
+
     controller_name = robot_name + '_controller'
-    file_name = save_dir + '/' + controller_name + '.yaml'
+    rosparam = SubElement(launch, 'rosparam')
+    rosparam.attrib = {'file':'$(find fusion2urdf)/launch/' + controller_name + '.yaml',
+                       'command':'load'}
+                       
+    controller_args_str = ' '.join([joint + '_position_controller' for joint in joints_dict]) \
+                            + ' joint_state_controller'
+    node_controller = SubElement(launch, 'node')
+    node_controller.attrib = {'name':'controller_spawner', 'pkg':'controller_manager', 'type':'spawner',\
+                    'respawn':'false', 'output':'screen', 'ns':robot_name,\
+                    'args':'{}'.format(controller_args_str)}
+    
+    node_publisher = SubElement(launch, 'node')
+    node_publisher.attrib = {'name':'robot_state_publisher', 'pkg':'robot_state_publisher',\
+                    'type':'robot_state_publisher', 'respawn':'false', 'output':'screen'}
+    remap = SubElement(node_publisher, 'remap')
+    remap.attrib = {'from':'/joint_states',\
+                    'to':'/' + robot_name + '/joint_states'}
+    
+    launch_xml = "\n".join(prettify(launch).split("\n")[1:])        
+    
+    file_name = save_dir + '/launch/' + robot_name + '_control.launch'    
+    with open(file_name, mode='w') as f:
+        f.write(launch_xml)
+        
+
+def write_yaml(robot_name, save_dir, joints_dict):
+    """
+    write yaml file "save_dir/launch/robot_name_controller.yaml"
+    
+    
+    Parameter
+    ---------
+    robot_name: str
+        name of the robot
+    save_dir: str
+        path of the repository to save
+    joints_dict: dict
+        information of the joints
+    """
+    try: os.mkdir(save_dir + '/launch')
+    except: pass 
+
+    controller_name = robot_name + '_controller'
+    file_name = save_dir + '/launch/' + controller_name + '.yaml'
     with open(file_name, 'w') as f:
         f.write(controller_name + ':\n')
-        f.write('  type: "position_controllers/JointTrajectoryController"\n')
-        f.write('  joints: \n')
+        # joint_state_controller
+        f.write('  # Publish all joint states -----------------------------------\n')
+        f.write('  joint_state_controller:\n')
+        f.write('    type: joint_state_controller/JointStateController\n')  
+        f.write('    publish_rate: 50\n\n')
+        # position_controllers
+        f.write('  # Position Controllers --------------------------------------\n')
         for joint in joints_dict:
-            f.write('    - ' + joint +'\n')
-        
+            f.write('    ' + joint + '_position_controller:\n')
+            f.write('      type: effort_controllers/JointPositionController\n')
+            f.write('      joint: '+ joint + '\n')
+            f.write('      pid: {p: 100.0, i: 0.01, d: 10.0}\n')
+
 
 def run(context):
     ui = None
@@ -722,7 +788,8 @@ def run(context):
         # --------------------
         # Generate URDF
         write_urdf(joints_dict, links_xyz_dict, inertial_dict, package_name, save_dir, robot_name)
-        write_launch(robot_name, save_dir)
+        write_gazebo_launch(robot_name, save_dir)
+        write_control_launch(robot_name, save_dir, joints_dict)
         write_yaml(robot_name, save_dir, joints_dict)
         
         # Generate STl files        
