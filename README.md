@@ -4,6 +4,7 @@
 
 * 2018/09/19: Fixed the bugs about the center of the mass and the inertia. 
 * 2018/09/25: Supports joint types "Rigid", "Slider" & Supports the joints' limit(for "Revolute" and "Slider"). 
+* 2018/10/20: Fixed fucnctions to generate launch files
 
 ## What is this script?
 This is a fusion 360 script to export urdf from fusion 360 directly.
@@ -38,6 +39,15 @@ Make sure z axis is upright in your fusion 360 model if you want.
 Before using this script, make sure that your model has all the "links" as componens. You have to define the links by creating corresiponding components. For example, this model(https://grabcad.com/library/spotmini-robot-1) is not supported unless you define the "base_link". In addition to that, you should be carefult when define your joints. The parent links should be set as Component2 when you define the joint not as Component1. For example, if you define the "base_link" as Component1 when you define the joints, an error saying "KeyError: base_link__1" will show up.
 
 <img src="https://github.com/syuntoku14/fusion2urdf/blob/images/spot_mini.PNG" alt="spot_mini" title="spot_mini" width="300" height="300">
+
+Also, make sure components of your model has only bodies, not nested components. 
+For example, this works:
+
+<img src="https://github.com/syuntoku14/fusion2urdf/blob/images/only_bodies.PNG" alt="only_bodies" title="only_bodies" width="300" height="300">
+
+but this doesn't work:
+
+<img src="https://github.com/syuntoku14/fusion2urdf/blob/images/nest_components.PNG" alt="nest_components" title="nest_components" width="300" height="300">
 
 Sometimes this script exports abnormal urdf without any error messages. In that case, the joints should have some problems. Redefine the joints and run again.
 
