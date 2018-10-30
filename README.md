@@ -45,7 +45,7 @@ For example, this works:
 
 <img src="https://github.com/syuntoku14/fusion2urdf/blob/images/only_bodies.PNG" alt="only_bodies" title="only_bodies" width="300" height="300">
 
-but this doesn't work:
+but this doesn't work since the "face" component contains other components. A component must contain only bodies:
 
 <img src="https://github.com/syuntoku14/fusion2urdf/blob/images/nest_components.PNG" alt="nest_components" title="nest_components" width="300" height="300">
 
