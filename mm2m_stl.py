@@ -27,7 +27,7 @@ def mm_to_m(mm):
         return m[:11] + idx
 
 def main():
-    assert sys.argv[1][-4:] == '.stl', 'stlファイルを入力してください'
+    assert sys.argv[1][-4:] == '.stl', 'Input stl file name.'
     file_name = sys.argv[1][:-4]  # file name without .stl
     path_r = file_name + '.stl'
     new_stl = []
