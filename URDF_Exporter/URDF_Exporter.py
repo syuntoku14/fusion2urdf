@@ -471,8 +471,11 @@ def set_joints_dict(root, joints_dict, msg):
             joint.geometryOrOriginOne.origin.asArray()]  # converted to meter
         except:
             try:
-                joint_dict['xyz'] = [round(i / 100.0, 6) for i in \
-                joint.geometryOrOriginTwo.origin.asArray()]  # converted to meter
+                if type(joint.geometryOrOriginTwo)==adsk.fusion.JointOrigin:
+                    data = joint.geometryOrOriginTwo.geometry.origin.asArray()
+                else:
+                    data = joint.geometryOrOriginTwo.origin.asArray()
+                joint_dict['xyz'] = [round(i / 100.0, 6) for i in data]  # converted to meter
             except:
                 msg = joint.name + " doesn't have joint origin. Please set it and run again."
                 break
