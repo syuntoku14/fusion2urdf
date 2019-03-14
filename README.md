@@ -36,20 +36,22 @@ Make sure z axis is upright in your fusion 360 model if you want.
 
 ## Before using this script
 
-Before using this script, make sure that your model has all the "links" as componens. You have to define the links by creating corresiponding components. For example, this model(https://grabcad.com/library/spotmini-robot-1) is not supported unless you define the "base_link". In addition to that, you should be carefult when define your joints. The parent links should be set as Component2 when you define the joint not as Component1. For example, if you define the "base_link" as Component1 when you define the joints, an error saying "KeyError: base_link__1" will show up.
+Before using this script, make sure that your model has all the "links" as componens. You have to define the links by creating corresiponding components. For example, this model(https://grabcad.com/library/spotmini-robot-1) is not supported unless you define the "base_link". 
+
+In addition to that, you should be carefult when define your joints. The **parent links** should be set as **Component2** when you define the joint, not as Component1. For example, if you define the "base_link" as Component1 when you define the joints, an error saying "KeyError: base_link__1" will show up.
 
 <img src="https://github.com/syuntoku14/fusion2urdf/blob/images/spot_mini.PNG" alt="spot_mini" title="spot_mini" width="300" height="300">
 
-Also, make sure components of your model has only bodies, not nested components. 
+Also, make sure components of your model has only bodies. **Nested components are not supported**.
 For example, this works:
 
 <img src="https://github.com/syuntoku14/fusion2urdf/blob/images/only_bodies.PNG" alt="only_bodies" title="only_bodies" width="300" height="300">
 
-but this doesn't work since the "face" component contains other components. A component must contain only bodies:
+but this doesn't work since the "face (3):1" component contains other components. A component must contain only bodies:
 
 <img src="https://github.com/syuntoku14/fusion2urdf/blob/images/nest_components.PNG" alt="nest_components" title="nest_components" width="300" height="300">
 
-Sometimes this script exports abnormal urdf without any error messages. In that case, the joints should have some problems. Redefine the joints and run again.
+Sometimes this script exports abnormal urdf without any error messages. In that case, the joints should have problems. Redefine the joints and run again.
 
 In addition to that, make sure that this script currently supports only "Rigid", "Slider" and "Revolute". I will add new joint types someday.
 
@@ -88,7 +90,7 @@ Maybe some error will occur when you run the script. Fix them according to the i
 
 ![error](https://github.com/syuntoku14/fusion2urdf/blob/images/error.png)
 
-The name of components can't contain any spaces. Also, you must define the base component. Rename the base component as "base_link". 
+**The name of components can't contain any spaces**. Also, **you must define the base component**. Rename the base component as "base_link". 
 
 <img src="https://github.com/syuntoku14/fusion2urdf/blob/images/cautions.PNG" alt="cautions" title="cautions" width="300" height="300">
 
