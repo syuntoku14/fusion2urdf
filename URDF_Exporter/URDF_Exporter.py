@@ -562,8 +562,18 @@ def write_joint_tran_urdf(joints_dict, repo, links_xyz_dict, file_name):
             joint_type = joints_dict[j]['type']
             upper_limit = joints_dict[j]['upper_limit']
             lower_limit = joints_dict[j]['lower_limit']
-            xyz = [round(p-c, 6) for p, c in \
-                zip(links_xyz_dict[parent], links_xyz_dict[child])]  # xyz = parent - child
+            try:
+                xyz = [round(p-c, 6) for p, c in \
+                    zip(links_xyz_dict[parent], links_xyz_dict[child])]  # xyz = parent - child
+            except KeyError as ke:
+                app = adsk.core.Application.get()
+                ui = app.userInterface
+                ui.messageBox("There seems to be an error with the connection between\n\n%s\nand\n%s\n\nCheck \
+whether the connections\nparent=component2=%s\nchild=component1=%s\nare correct or if you need \
+to swap component1<=>component2"
+                % (parent, child, parent, child), "Error!")
+                quit()
+                
             joint = Joint(name=j, joint_type = joint_type, xyz=xyz, \
             axis=joints_dict[j]['axis'], parent=parent, child=child, \
             upper_limit=upper_limit, lower_limit=lower_limit)
