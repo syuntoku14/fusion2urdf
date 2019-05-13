@@ -92,7 +92,7 @@ Maybe some error will occur when you run the script. Fix them according to the i
 
 ![error](https://github.com/syuntoku14/fusion2urdf/blob/images/error.png)
 
-**The name of components can't contain any spaces**. Also, **you must define the base component**. Rename the base component as "base_link". 
+**You must define the base component**. Rename the base component as "base_link". 
 
 <img src="https://github.com/syuntoku14/fusion2urdf/blob/images/cautions.PNG" alt="cautions" title="cautions" width="300" height="300">
 
