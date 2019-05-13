@@ -5,7 +5,7 @@ Created on Sun May 12 20:17:17 2019
 @author: syuntoku
 """
 
-import adsk
+import adsk, re
 from xml.etree.ElementTree import Element, SubElement
 from ..utils import utils
 
@@ -172,8 +172,8 @@ def make_joints_dict(root, msg):
         if joint.occurrenceTwo.component.name == 'base_link':
             joint_dict['parent'] = 'base_link'
         else:
-            joint_dict['parent'] = joint.occurrenceTwo.name.replace(':', '__')
-        joint_dict['child'] = joint.occurrenceOne.name.replace(':', '__')
+            joint_dict['parent'] = re.sub('[ :()]', '_', joint.occurrenceTwo.name)
+        joint_dict['child'] = re.sub('[ :()]', '_', joint.occurrenceOne.name)
         
         try:
             joint_dict['xyz'] = [round(i / 100.0, 6) for i in \
@@ -189,8 +189,5 @@ def make_joints_dict(root, msg):
                 msg = joint.name + " doesn't have joint origin. Please set it and run again."
                 break
         
-        if ' ' in joint.name or '(' in joint.name or ')' in joint.name:
-            msg = 'A space or parenthesis are detected in the name of ' + joint.name + '. Please remove spaces and run again.'
-            break
         joints_dict[joint.name] = joint_dict
     return joints_dict, msg

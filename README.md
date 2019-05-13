@@ -68,13 +68,15 @@ Run the following command in your shell.
 ###### Windows (In PowerShell)
 
 ```powershell
-mkdir "${env:APPDATA}\Autodesk\Autodesk Fusion 360\API\Scripts\URDF_Exporter"; cd "${env:APPDATA}\Autodesk\Autodesk Fusion 360\API\Scripts\URDF_Exporter"; function Cmd-Curl {cmd /c curl $args}; Set-Alias -Name curl -Value Cmd-Curl -Option AllScope; curl https://raw.githubusercontent.com/syuntoku14/fusion2urdf/master/URDF_Exporter/URDF_Exporter.py -o URDF_Exporter.py; curl https://raw.githubusercontent.com/syuntoku14/fusion2urdf/master/URDF_Exporter/URDF_Exporter.manifest -o URDF_Exporter.manifest
+cd <path to fusion2urdf>
+Copy-Item ".\URDF_Exporter\" -Destination "${env:APPDATA}\Autodesk\Autodesk Fusion 360\API\Scripts\" -Recurse
 ```
 
 ###### macOS (In Bash)
 
 ```bash
-mkdir "$HOME/Library/Application Support/Autodesk/Autodesk Fusion 360/API/Scripts/URDF_Exporter" && cd "$HOME/Library/Application Support/Autodesk/Autodesk Fusion 360/API/Scripts/URDF_Exporter" && curl https://raw.githubusercontent.com/syuntoku14/fusion2urdf/master/URDF_Exporter/URDF_Exporter.py -o URDF_Exporter.py && curl https://raw.githubusercontent.com/syuntoku14/fusion2urdf/master/URDF_Exporter/URDF_Exporter.manifest -o URDF_Exporter.manifest
+cd <path to fusion2urdf>
+cp -r ../URDF_Exporter "$HOME/Library/Application Support/Autodesk/Autodesk Fusion 360/API/Scripts/"
 ```
 
 ##### Run

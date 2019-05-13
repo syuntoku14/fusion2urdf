@@ -5,7 +5,7 @@ Created on Sun May 12 20:11:28 2019
 @author: syuntoku
 """
 
-import adsk
+import adsk, re
 from xml.etree.ElementTree import Element, SubElement
 from ..utils import utils
 
@@ -121,8 +121,6 @@ def make_inertial_dict(root, msg):
         if occs.component.name == 'base_link':
             inertial_dict['base_link'] = occs_dict
         else:
-            inertial_dict[occs.name.replace(':', '__')] = occs_dict
-        if ' ' in occs.name or '(' in occs.name or ')' in occs.name:
-            msg = 'A space or parenthesis are detected in the name of ' + occs.name + '. Please remove them and run again.'
-            break
+            inertial_dict[re.sub('[ :()]', '_', occs.name)] = occs_dict
+
     return inertial_dict, msg

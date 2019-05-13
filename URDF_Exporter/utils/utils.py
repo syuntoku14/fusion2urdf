@@ -6,7 +6,7 @@ Created on Sun May 12 19:15:34 2019
 """
 
 import adsk, adsk.core, adsk.fusion
-import os.path
+import os.path, re
 from xml.etree import ElementTree
 from xml.dom import minidom
 
@@ -36,7 +36,7 @@ def copy_occs(root):
                 old_occs.component.name = 'old_component'
                 new_occs.component.name = 'base_link'
             else:
-                new_occs.component.name = occs.name.replace(':', '__')
+                new_occs.component.name = re.sub('[ :()]', '_', occs.name)
             new_occs = allOccs[-1]
             for i in range(bodies.count):
                 body = bodies.item(i)
