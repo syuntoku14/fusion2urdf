@@ -15,40 +15,38 @@ def copy_occs(root):
     """    
     duplicate all the components
     """    
-    def copy_body(allOccs, old_occs):
+    def copy_body(allOccs, occs):
         """    
         copy the old occs to new component
         """
         
-        bodies = old_occs.bRepBodies
+        bodies = occs.bRepBodies
         transform = adsk.core.Matrix3D.create()
-        old_component_name = old_occs.component.name
         
         # Create new components from occs
         # This support even when a component has some occses. 
-        same_occs = []  
-        for occs in allOccs:
-            if occs.component.name == old_component_name:
-                same_occs.append(occs)
-        for occs in same_occs:
-            new_occs = allOccs.addNewComponent(transform)  # this create new occs
-            if occs.component.name == 'base_link':
-                old_occs.component.name = 'old_component'
-                new_occs.component.name = 'base_link'
-            else:
-                new_occs.component.name = re.sub('[ :()]', '_', occs.name)
-            new_occs = allOccs[-1]
-            for i in range(bodies.count):
-                body = bodies.item(i)
-                body.copyToComponent(new_occs)
-        old_occs.component.name = 'old_component'
-        
+
+        new_occs = allOccs.addNewComponent(transform)  # this create new occs
+        if occs.component.name == 'base_link':
+            occs.component.name = 'old_component'
+            new_occs.component.name = 'base_link'
+        else:
+            new_occs.component.name = re.sub('[ :()]', '_', occs.name)
+        new_occs = allOccs[-1]
+        for i in range(bodies.count):
+            body = bodies.item(i)
+            body.copyToComponent(new_occs)
+    
     allOccs = root.occurrences
+    oldOccs = []
     coppy_list = [occs for occs in allOccs]
     for occs in coppy_list:
         if occs.bRepBodies.count > 0:
             copy_body(allOccs, occs)
+            oldOccs.append(occs)
 
+    for occs in oldOccs:
+        occs.component.name = 'old_component'
 
 def export_stl(design, save_dir, components):  
     """
@@ -75,18 +73,19 @@ def export_stl(design, save_dir, components):
             continue
         allOccus = component.allOccurrences
         for occ in allOccus:
-            try:
-                print(occ.component.name)
-                fileName = scriptDir + "/" + occ.component.name              
-                # create stl exportOptions
-                stlExportOptions = exportMgr.createSTLExportOptions(occ, fileName)
-                stlExportOptions.sendToPrintUtility = False
-                stlExportOptions.isBinaryFormat = False
-                # options are .MeshRefinementLow .MeshRefinementMedium .MeshRefinementHigh
-                stlExportOptions.meshRefinement = adsk.fusion.MeshRefinementSettings.MeshRefinementMedium
-                exportMgr.execute(stlExportOptions)
-            except:
-                print('Component ' + occ.component.name + 'has something wrong.')
+            if 'old_component' not in occ.component.name:
+                try:
+                    print(occ.component.name)
+                    fileName = scriptDir + "/" + occ.component.name              
+                    # create stl exportOptions
+                    stlExportOptions = exportMgr.createSTLExportOptions(occ, fileName)
+                    stlExportOptions.sendToPrintUtility = False
+                    stlExportOptions.isBinaryFormat = False
+                    # options are .MeshRefinementLow .MeshRefinementMedium .MeshRefinementHigh
+                    stlExportOptions.meshRefinement = adsk.fusion.MeshRefinementSettings.MeshRefinementLow
+                    exportMgr.execute(stlExportOptions)
+                except:
+                    print('Component ' + occ.component.name + 'has something wrong.')
                 
 
 def file_dialog(ui):     
