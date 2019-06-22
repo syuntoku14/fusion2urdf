@@ -82,7 +82,7 @@ def export_stl(design, save_dir, components):
                     stlExportOptions.sendToPrintUtility = False
                     stlExportOptions.isBinaryFormat = False
                     # options are .MeshRefinementLow .MeshRefinementMedium .MeshRefinementHigh
-                    stlExportOptions.meshRefinement = adsk.fusion.MeshRefinementSettings.MeshRefinementLow
+                    stlExportOptions.meshRefinement = adsk.fusion.MeshRefinementSettings.MeshRefinementMedium
                     exportMgr.execute(stlExportOptions)
                 except:
                     print('Component ' + occ.component.name + 'has something wrong.')
