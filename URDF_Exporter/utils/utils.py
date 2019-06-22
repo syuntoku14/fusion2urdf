@@ -71,22 +71,21 @@ def export_stl(design, save_dir, components):
     scriptDir = save_dir + '/mm_stl'  
     # export the occurrence one by one in the component to a specified file
     for component in components:
-        if 'old' in component.name:
-            continue
         allOccus = component.allOccurrences
         for occ in allOccus:
-            try:
-                print(occ.component.name)
-                fileName = scriptDir + "/" + occ.component.name              
-                # create stl exportOptions
-                stlExportOptions = exportMgr.createSTLExportOptions(occ, fileName)
-                stlExportOptions.sendToPrintUtility = False
-                stlExportOptions.isBinaryFormat = False
-                # options are .MeshRefinementLow .MeshRefinementMedium .MeshRefinementHigh
-                stlExportOptions.meshRefinement = adsk.fusion.MeshRefinementSettings.MeshRefinementMedium
-                exportMgr.execute(stlExportOptions)
-            except:
-                print('Component ' + occ.component.name + 'has something wrong.')
+            if 'old_component' not in occ.component.name:
+                try:
+                    print(occ.component.name)
+                    fileName = scriptDir + "/" + occ.component.name              
+                    # create stl exportOptions
+                    stlExportOptions = exportMgr.createSTLExportOptions(occ, fileName)
+                    stlExportOptions.sendToPrintUtility = False
+                    stlExportOptions.isBinaryFormat = False
+                    # options are .MeshRefinementLow .MeshRefinementMedium .MeshRefinementHigh
+                    stlExportOptions.meshRefinement = adsk.fusion.MeshRefinementSettings.MeshRefinementLow
+                    exportMgr.execute(stlExportOptions)
+                except:
+                    print('Component ' + occ.component.name + 'has something wrong.')
                 
 
 def file_dialog(ui):     
