@@ -65,9 +65,9 @@ def export_stl(design, save_dir, components):
     # create a single exportManager instance
     exportMgr = design.exportManager
     # get the script location
-    try: os.mkdir(save_dir + '/mm_stl')
+    try: os.mkdir(save_dir + '/meshes')
     except: pass
-    scriptDir = save_dir + '/mm_stl'  
+    scriptDir = save_dir + '/meshes'  
     # export the occurrence one by one in the component to a specified file
     for component in components:
         allOccus = component.allOccurrences
@@ -79,7 +79,7 @@ def export_stl(design, save_dir, components):
                     # create stl exportOptions
                     stlExportOptions = exportMgr.createSTLExportOptions(occ, fileName)
                     stlExportOptions.sendToPrintUtility = False
-                    stlExportOptions.isBinaryFormat = False
+                    stlExportOptions.isBinaryFormat = True
                     # options are .MeshRefinementLow .MeshRefinementMedium .MeshRefinementHigh
                     stlExportOptions.meshRefinement = adsk.fusion.MeshRefinementSettings.MeshRefinementLow
                     exportMgr.execute(stlExportOptions)
