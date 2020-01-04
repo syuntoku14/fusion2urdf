@@ -60,7 +60,7 @@ def write_link_urdf(joints_dict, repo, links_xyz_dict, file_name, inertial_dict)
             f.write('\n')
 
 
-def write_joint_tran_urdf(joints_dict, repo, links_xyz_dict, file_name):
+def write_joint_urdf(joints_dict, repo, links_xyz_dict, file_name):
     """
     Write joints and transmission information into urdf "repo/file_name"
     
@@ -102,8 +102,6 @@ to swap component1<=>component2"
             joint.make_joint_xml()
             joint.make_transmission_xml()
             f.write(joint.joint_xml)
-            if joint_type != 'fixed':
-                f.write(joint.tran_xml)
             f.write('\n')
 
 def write_gazebo_plugin_and_endtag(file_name):
@@ -126,7 +124,7 @@ def write_gazebo_plugin_and_endtag(file_name):
         f.write('</robot>\n')
         
 
-def write_urdf(joints_dict, links_xyz_dict, inertial_dict, package_name, save_dir, robot_name):
+def write_urdf(joints_dict, links_xyz_dict, inertial_dict, package_name, robot_name, save_dir):
     try: os.mkdir(save_dir + '/urdf')
     except: pass 
 
@@ -140,10 +138,10 @@ def write_urdf(joints_dict, links_xyz_dict, inertial_dict, package_name, save_di
         f.write('\n')
 
     write_link_urdf(joints_dict, repo, links_xyz_dict, file_name, inertial_dict)
-    write_joint_tran_urdf(joints_dict, repo, links_xyz_dict, file_name)
+    write_joint_urdf(joints_dict, repo, links_xyz_dict, file_name)
     write_gazebo_plugin_and_endtag(file_name)
 
-def write_materials_xacro(joints_dict, links_xyz_dict, inertial_dict, save_dir, robot_name):
+def write_materials_xacro(joints_dict, links_xyz_dict, inertial_dict, package_name, robot_name, save_dir):
     try: os.mkdir(save_dir + '/urdf')
     except: pass  
 
@@ -156,6 +154,57 @@ def write_materials_xacro(joints_dict, links_xyz_dict, inertial_dict, save_dir, 
         f.write('  <color rgba="0.700 0.700 0.700 1.000"/>\n')
         f.write('</material>\n')
         f.write('\n')
+        f.write('</robot>\n')
+
+def write_transmissions_xacro(joints_dict, links_xyz_dict, inertial_dict, package_name, robot_name, save_dir):
+    """
+    Write joints and transmission information into urdf "repo/file_name"
+    
+    
+    Parameters
+    ----------
+    joints_dict: dict
+        information of the each joint
+    repo: str
+        the name of the repository to save the xml file
+    links_xyz_dict: dict
+        xyz information of the each link
+    file_name: str
+        urdf full path
+    """
+    
+    file_name = save_dir + '/urdf/{}.trans'.format(robot_name)  # the name of urdf file
+    with open(file_name, mode='w') as f:
+        f.write('<?xml version="1.0" ?>\n')
+        f.write('<robot name="{}" xmlns:xacro="http://www.ros.org/wiki/xacro" >\n'.format(robot_name))
+        f.write('\n')
+
+        for j in joints_dict:
+            parent = joints_dict[j]['parent']
+            child = joints_dict[j]['child']
+            joint_type = joints_dict[j]['type']
+            upper_limit = joints_dict[j]['upper_limit']
+            lower_limit = joints_dict[j]['lower_limit']
+            try:
+                xyz = [round(p-c, 6) for p, c in \
+                    zip(links_xyz_dict[parent], links_xyz_dict[child])]  # xyz = parent - child
+            except KeyError as ke:
+                app = adsk.core.Application.get()
+                ui = app.userInterface
+                ui.messageBox("There seems to be an error with the connection between\n\n%s\nand\n%s\n\nCheck \
+whether the connections\nparent=component2=%s\nchild=component1=%s\nare correct or if you need \
+to swap component1<=>component2"
+                % (parent, child, parent, child), "Error!")
+                quit()
+                
+            joint = Joint.Joint(name=j, joint_type = joint_type, xyz=xyz, \
+            axis=joints_dict[j]['axis'], parent=parent, child=child, \
+            upper_limit=upper_limit, lower_limit=lower_limit)
+            if joint_type != 'fixed':
+                joint.make_transmission_xml()
+                f.write(joint.tran_xml)
+                f.write('\n')
+
         f.write('</robot>\n')
 
 def write_display_launch(package_name, robot_name, save_dir):
