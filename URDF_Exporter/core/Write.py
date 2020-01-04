@@ -43,6 +43,7 @@ def write_link_urdf(joints_dict, repo, links_xyz_dict, file_name, inertial_dict)
         links_xyz_dict[link.name] = link.xyz
         link.make_link_xml()
         f.write(link.link_xml)
+        f.write('\n')
 
         # others
         for joint in joints_dict:
@@ -56,6 +57,7 @@ def write_link_urdf(joints_dict, repo, links_xyz_dict, file_name, inertial_dict)
             links_xyz_dict[link.name] = link.xyz            
             link.make_link_xml()
             f.write(link.link_xml)
+            f.write('\n')
 
 
 def write_joint_tran_urdf(joints_dict, repo, links_xyz_dict, file_name):
@@ -102,7 +104,7 @@ to swap component1<=>component2"
             f.write(joint.joint_xml)
             if joint_type != 'fixed':
                 f.write(joint.tran_xml)
-
+            f.write('\n')
 
 def write_gazebo_plugin_and_endtag(file_name):
     """
