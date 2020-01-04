@@ -9,7 +9,9 @@ import adsk, adsk.core, adsk.fusion
 import os.path, re
 from xml.etree import ElementTree
 from xml.dom import minidom
-
+from distutils.dir_util import copy_tree
+import fileinput
+import sys
 
 def copy_occs(root):    
     """    
@@ -142,3 +144,30 @@ def prettify(elem):
     reparsed = minidom.parseString(rough_string)
     return reparsed.toprettyxml(indent="  ")
 
+def copy_package(save_dir, package_dir):
+    try: os.mkdir(save_dir + '/launch')
+    except: pass 
+    try: os.mkdir(save_dir + '/urdf')
+    except: pass 
+    copy_tree(package_dir, save_dir)
+
+def update_cmakelists(save_dir, package_name):
+    file_name = save_dir + '/CMakeLists.txt'
+
+    for line in fileinput.input(file_name, inplace=True):
+        if 'project(fusion2urdf)' in line:
+            sys.stdout.write("project(" + package_name + ")\n")
+        else:
+            sys.stdout.write(line)
+
+def update_package_xml(save_dir, package_name):
+    file_name = save_dir + '/package.xml'
+
+    for line in fileinput.input(file_name, inplace=True):
+        if '<name>' in line:
+            sys.stdout.write("  <name>" + package_name + "</name>\n")
+        elif '<description>' in line:
+            sys.stdout.write("<description>The " + package_name + " package</description>\n")
+        else:
+            sys.stdout.write(line)
+        

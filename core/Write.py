@@ -127,8 +127,11 @@ def write_gazebo_plugin_and_endtag(file_name):
         
 
 def write_urdf(joints_dict, links_xyz_dict, inertial_dict, package_name, save_dir, robot_name):
-    file_name = save_dir + '/' + robot_name + '.urdf'  # the name of urdf file
-    repo = package_name + '/' + robot_name + '/meshes/'  # the repository of binary stl files
+    try: os.mkdir(save_dir + '/urdf')
+    except: pass 
+
+    file_name = save_dir + '/urdf/' + robot_name + '.urdf'  # the name of urdf file
+    repo = package_name + '/meshes/'  # the repository of binary stl files
     with open(file_name, mode='w') as f:
         f.write('<?xml version="1.0" ?>\n')
         f.write('<robot name="{}">\n'.format(robot_name))
@@ -142,10 +145,56 @@ def write_urdf(joints_dict, links_xyz_dict, inertial_dict, package_name, save_di
     write_joint_tran_urdf(joints_dict, repo, links_xyz_dict, file_name)
     write_gazebo_plugin_and_endtag(file_name)
 
-
-def write_gazebo_launch(robot_name, save_dir):
+def write_display_launch(package_name, robot_name, save_dir):
     """
-    write gazebo launch file "save_dir/launch/robot_name_gazebo.launch"
+    write display launch file "save_dir/launch/display.launch"
+
+
+    Parameter
+    ---------
+    robot_name: str
+    name of the robot
+    save_dir: str
+    path of the repository to save
+    """   
+    try: os.mkdir(save_dir + '/launch')
+    except: pass     
+
+    launch = Element('launch')     
+
+    arg1 = SubElement(launch, 'arg')
+    arg1.attrib = {'name':'model', 'default':'$(find {})/urdf/{}.urdf'.format(package_name, robot_name)}
+
+    arg2 = SubElement(launch, 'arg')
+    arg2.attrib = {'name':'gui', 'default':'true'}
+
+    arg3 = SubElement(launch, 'arg')
+    arg3.attrib = {'name':'rvizconfig', 'default':'$(find {})/launch/urdf.rviz'.format(package_name)}
+
+    param1 = SubElement(launch, 'param')
+    param1.attrib = {'name':'robot_description', 'command':'$(find xacro)/xacro $(arg model)'}
+
+    param2 = SubElement(launch, 'param')
+    param2.attrib = {'name':'use_gui', 'value':'$(arg gui)'}
+
+    node1 = SubElement(launch, 'node')
+    node1.attrib = {'name':'joint_state_publisher', 'pkg':'joint_state_publisher', 'type':'joint_state_publisher'}
+
+    node2 = SubElement(launch, 'node')
+    node2.attrib = {'name':'robot_state_publisher', 'pkg':'robot_state_publisher', 'type':'robot_state_publisher'}
+
+    node3 = SubElement(launch, 'node')
+    node3.attrib = {'name':'rviz', 'pkg':'rviz', 'args':'-d $(arg rvizconfig)', 'type':'rviz', 'required':'true'}
+
+    launch_xml = "\n".join(utils.prettify(launch).split("\n")[1:])        
+
+    file_name = save_dir + '/launch/display.launch'    
+    with open(file_name, mode='w') as f:
+        f.write(launch_xml)
+
+def write_gazebo_launch(package_name, robot_name, save_dir):
+    """
+    write gazebo launch file "save_dir/launch/gazebo.launch"
     
     
     Parameter
@@ -161,14 +210,14 @@ def write_gazebo_launch(robot_name, save_dir):
     
     launch = Element('launch')
     param = SubElement(launch, 'param')
-    param.attrib = {'name':'robot_description', 'textfile':'$(find fusion2urdf)/{}/{}.urdf'.format(robot_name, robot_name)}
+    param.attrib = {'name':'robot_description', 'textfile':'$(find {})/urdf/{}.urdf'.format(package_name, robot_name)}
 
     include_ =  SubElement(launch, 'include')
     include_.attrib = {'file':'$(find gazebo_ros)/launch/empty_world.launch'}        
     
     number_of_args = 5
     args = [None for i in range(number_of_args)]
-    args_name_value_pairs = [['paused', 'false'], ['use_sim_time', 'true'],
+    args_name_value_pairs = [['paused', 'true'], ['use_sim_time', 'true'],
                              ['gui', 'true'], ['headless', 'false'], 
                              ['debug', 'false']]
                              
@@ -183,14 +232,14 @@ def write_gazebo_launch(robot_name, save_dir):
     
     launch_xml = "\n".join(utils.prettify(launch).split("\n")[1:])        
     
-    file_name = save_dir + '/launch/' + robot_name + '_gazebo.launch'    
+    file_name = save_dir + '/launch/' + 'gazebo.launch'    
     with open(file_name, mode='w') as f:
         f.write(launch_xml)
 
 
-def write_control_launch(robot_name, save_dir, joints_dict):
+def write_control_launch(package_name, robot_name, save_dir, joints_dict):
     """
-    write control launch file "save_dir/launch/robot_name_control.launch"
+    write control launch file "save_dir/launch/controller.launch"
     
     
     Parameter
@@ -210,7 +259,7 @@ def write_control_launch(robot_name, save_dir, joints_dict):
 
     controller_name = robot_name + '_controller'
     rosparam = SubElement(launch, 'rosparam')
-    rosparam.attrib = {'file':'$(find fusion2urdf)/launch/' + controller_name + '.yaml',
+    rosparam.attrib = {'file':'$(find {})/launch/controller.yaml'.format(package_name),
                        'command':'load'}
                        
     controller_args_str = ""
@@ -234,14 +283,14 @@ def write_control_launch(robot_name, save_dir, joints_dict):
     
     launch_xml = "\n".join(utils.prettify(launch).split("\n")[1:])        
     
-    file_name = save_dir + '/launch/' + robot_name + '_control.launch'    
+    file_name = save_dir + '/launch/controller.launch'    
     with open(file_name, mode='w') as f:
         f.write(launch_xml)
         
 
-def write_yaml(robot_name, save_dir, joints_dict):
+def write_yaml(package_name, robot_name, save_dir, joints_dict):
     """
-    write yaml file "save_dir/launch/robot_name_controller.yaml"
+    write yaml file "save_dir/launch/controller.yaml"
     
     
     Parameter
@@ -257,7 +306,7 @@ def write_yaml(robot_name, save_dir, joints_dict):
     except: pass 
 
     controller_name = robot_name + '_controller'
-    file_name = save_dir + '/launch/' + controller_name + '.yaml'
+    file_name = save_dir + '/launch/controller.yaml'
     with open(file_name, 'w') as f:
         f.write(controller_name + ':\n')
         # joint_state_controller
