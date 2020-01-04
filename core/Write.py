@@ -136,6 +136,10 @@ def write_urdf(joints_dict, links_xyz_dict, inertial_dict, package_name, robot_n
         f.write('\n')
         f.write('<xacro:include filename="$(find {})/urdf/materials.xacro" />'.format(package_name))
         f.write('\n')
+        f.write('<xacro:include filename="$(find {})/urdf/{}.trans" />'.format(package_name, robot_name))
+        f.write('\n')
+        f.write('<xacro:include filename="$(find {})/urdf/{}.gazebo" />'.format(package_name, robot_name))
+        f.write('\n')
 
     write_link_urdf(joints_dict, repo, links_xyz_dict, file_name, inertial_dict)
     write_joint_urdf(joints_dict, repo, links_xyz_dict, file_name)
@@ -204,6 +208,49 @@ to swap component1<=>component2"
                 joint.make_transmission_xml()
                 f.write(joint.tran_xml)
                 f.write('\n')
+
+        f.write('</robot>\n')
+
+def write_gazebo_xacro(joints_dict, links_xyz_dict, inertial_dict, package_name, robot_name, save_dir):
+    try: os.mkdir(save_dir + '/urdf')
+    except: pass  
+
+    file_name = save_dir + '/urdf/' + robot_name + '.gazebo'  # the name of urdf file
+    repo = robot_name + '/meshes/'  # the repository of binary stl files
+    #repo = package_name + '/' + robot_name + '/bin_stl/'  # the repository of binary stl files
+    with open(file_name, mode='w') as f:
+        f.write('<?xml version="1.0" ?>\n')
+        f.write('<robot name="{}" xmlns:xacro="http://www.ros.org/wiki/xacro" >\n'.format(robot_name))
+        f.write('\n')
+        f.write('<xacro:property name="body_color" value="Gazebo/Silver" />\n')
+        f.write('\n')
+
+        gazebo = Element('gazebo')
+        plugin = SubElement(gazebo, 'plugin')
+        plugin.attrib = {'name':'control', 'filename':'libgazebo_ros_control.so'}
+        gazebo_xml = "\n".join(utils.prettify(gazebo).split("\n")[1:])
+        f.write(gazebo_xml)
+
+        # for base_link
+        f.write('<gazebo reference="base_link">\n')
+        f.write('  <material>${body_color}</material>\n')
+        f.write('  <mu1>0.2</mu1>\n')
+        f.write('  <mu2>0.2</mu2>\n')
+        f.write('  <selfCollide>true</selfCollide>\n')
+        f.write('  <gravity>true</gravity>\n')
+        f.write('</gazebo>\n')
+        f.write('\n')
+
+        # others
+        for joint in joints_dict:
+            name = joints_dict[joint]['child']
+            f.write('<gazebo reference="{}">\n'.format(name))
+            f.write('  <material>${body_color}</material>\n')
+            f.write('  <mu1>0.2</mu1>\n')
+            f.write('  <mu2>0.2</mu2>\n')
+            f.write('  <selfCollide>true</selfCollide>\n')
+            f.write('</gazebo>\n')
+            f.write('\n')
 
         f.write('</robot>\n')
 
