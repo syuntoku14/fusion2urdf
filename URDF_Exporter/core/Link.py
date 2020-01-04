@@ -69,8 +69,6 @@ class Link:
         mesh_v.attrib = {'filename':'package://' + self.repo + self.name + '.stl','scale':'0.001 0.001 0.001'}
         material = SubElement(visual, 'material')
         material.attrib = {'name':'silver'}
-        color = SubElement(material, 'color')
-        color.attrib = {'rgba':'1 0 0 1'}
         
         # collision
         collision = SubElement(link, 'collision')

@@ -132,6 +132,11 @@ def write_urdf(joints_dict, links_xyz_dict, inertial_dict, package_name, save_di
     with open(file_name, mode='w') as f:
         f.write('<?xml version="1.0" ?>\n')
         f.write('<robot name="{}">\n'.format(robot_name))
+        f.write('\n')
+        f.write('<material name="silver">\n')
+        f.write('  <color rgba="0.700 0.700 0.700 1.000"/>\n')
+        f.write('</material>\n')
+        f.write('\n')
 
     write_link_urdf(joints_dict, repo, links_xyz_dict, file_name, inertial_dict)
     write_joint_tran_urdf(joints_dict, repo, links_xyz_dict, file_name)
