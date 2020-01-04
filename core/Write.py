@@ -130,11 +130,11 @@ def write_urdf(joints_dict, links_xyz_dict, inertial_dict, package_name, save_di
     try: os.mkdir(save_dir + '/urdf')
     except: pass 
 
-    file_name = save_dir + '/urdf/' + robot_name + '.urdf'  # the name of urdf file
+    file_name = save_dir + '/urdf/' + robot_name + '.xacro'  # the name of urdf file
     repo = package_name + '/meshes/'  # the repository of binary stl files
     with open(file_name, mode='w') as f:
         f.write('<?xml version="1.0" ?>\n')
-        f.write('<robot name="{}">\n'.format(robot_name))
+        f.write('<robot name="{}" xmlns:xacro="http://www.ros.org/wiki/xacro">\n'.format(robot_name))
         f.write('\n')
         f.write('<material name="silver">\n')
         f.write('  <color rgba="0.700 0.700 0.700 1.000"/>\n')
@@ -163,7 +163,7 @@ def write_display_launch(package_name, robot_name, save_dir):
     launch = Element('launch')     
 
     arg1 = SubElement(launch, 'arg')
-    arg1.attrib = {'name':'model', 'default':'$(find {})/urdf/{}.urdf'.format(package_name, robot_name)}
+    arg1.attrib = {'name':'model', 'default':'$(find {})/urdf/{}.xacro'.format(package_name, robot_name)}
 
     arg2 = SubElement(launch, 'arg')
     arg2.attrib = {'name':'gui', 'default':'true'}
@@ -210,7 +210,7 @@ def write_gazebo_launch(package_name, robot_name, save_dir):
     
     launch = Element('launch')
     param = SubElement(launch, 'param')
-    param.attrib = {'name':'robot_description', 'textfile':'$(find {})/urdf/{}.urdf'.format(package_name, robot_name)}
+    param.attrib = {'name':'robot_description', 'textfile':'$(find {})/urdf/{}.xacro'.format(package_name, robot_name)}
 
     include_ =  SubElement(launch, 'include')
     include_.attrib = {'file':'$(find gazebo_ros)/launch/empty_world.launch'}        
