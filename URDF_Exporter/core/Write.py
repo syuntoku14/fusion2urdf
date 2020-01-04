@@ -100,7 +100,8 @@ to swap component1<=>component2"
             joint.make_joint_xml()
             joint.make_transmission_xml()
             f.write(joint.joint_xml)
-            f.write(joint.tran_xml)
+            if joint_type != 'fixed':
+                f.write(joint.tran_xml)
 
 
 def write_gazebo_plugin_and_endtag(file_name):
@@ -205,8 +206,13 @@ def write_control_launch(robot_name, save_dir, joints_dict):
     rosparam.attrib = {'file':'$(find fusion2urdf)/launch/' + controller_name + '.yaml',
                        'command':'load'}
                        
-    controller_args_str = ' '.join([joint + '_position_controller' for joint in joints_dict]) \
-                            + ' joint_state_controller'
+    controller_args_str = ""
+    for j in joints_dict:
+        joint_type = joints_dict[j]['type']
+        if joint_type != 'fixed':
+            controller_args_str += j + '_position_controller '
+    controller_args_str += 'joint_state_controller '
+
     node_controller = SubElement(launch, 'node')
     node_controller.attrib = {'name':'controller_spawner', 'pkg':'controller_manager', 'type':'spawner',\
                     'respawn':'false', 'output':'screen', 'ns':robot_name,\
@@ -255,8 +261,10 @@ def write_yaml(robot_name, save_dir, joints_dict):
         # position_controllers
         f.write('  # Position Controllers --------------------------------------\n')
         for joint in joints_dict:
-            f.write('    ' + joint + '_position_controller:\n')
-            f.write('      type: effort_controllers/JointPositionController\n')
-            f.write('      joint: '+ joint + '\n')
-            f.write('      pid: {p: 100.0, i: 0.01, d: 10.0}\n')
+            joint_type = joints_dict[joint]['type']
+            if joint_type != 'fixed':
+                f.write('    ' + joint + '_position_controller:\n')
+                f.write('      type: effort_controllers/JointPositionController\n')
+                f.write('      joint: '+ joint + '\n')
+                f.write('      pid: {p: 100.0, i: 0.01, d: 10.0}\n')
 
