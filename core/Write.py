@@ -136,14 +136,27 @@ def write_urdf(joints_dict, links_xyz_dict, inertial_dict, package_name, save_di
         f.write('<?xml version="1.0" ?>\n')
         f.write('<robot name="{}" xmlns:xacro="http://www.ros.org/wiki/xacro">\n'.format(robot_name))
         f.write('\n')
-        f.write('<material name="silver">\n')
-        f.write('  <color rgba="0.700 0.700 0.700 1.000"/>\n')
-        f.write('</material>\n')
+        f.write('<xacro:include filename="$(find {})/urdf/materials.xacro" />'.format(package_name))
         f.write('\n')
 
     write_link_urdf(joints_dict, repo, links_xyz_dict, file_name, inertial_dict)
     write_joint_tran_urdf(joints_dict, repo, links_xyz_dict, file_name)
     write_gazebo_plugin_and_endtag(file_name)
+
+def write_materials_xacro(joints_dict, links_xyz_dict, inertial_dict, save_dir, robot_name):
+    try: os.mkdir(save_dir + '/urdf')
+    except: pass  
+
+    file_name = save_dir + '/urdf/materials.xacro'  # the name of urdf file
+    with open(file_name, mode='w') as f:
+        f.write('<?xml version="1.0" ?>\n')
+        f.write('<robot name="{}" xmlns:xacro="http://www.ros.org/wiki/xacro" >\n'.format(robot_name))
+        f.write('\n')
+        f.write('<material name="silver">\n')
+        f.write('  <color rgba="0.700 0.700 0.700 1.000"/>\n')
+        f.write('</material>\n')
+        f.write('\n')
+        f.write('</robot>\n')
 
 def write_display_launch(package_name, robot_name, save_dir):
     """

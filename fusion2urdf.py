@@ -76,6 +76,7 @@ def run(context):
         # --------------------
         # Generate URDF
         Write.write_urdf(joints_dict, links_xyz_dict, inertial_dict, package_name, save_dir, robot_name)
+        Write.write_materials_xacro(joints_dict, links_xyz_dict, inertial_dict, save_dir, robot_name)
         Write.write_display_launch(package_name, robot_name, save_dir)
         Write.write_gazebo_launch(package_name, robot_name, save_dir)
         Write.write_control_launch(package_name, robot_name, save_dir, joints_dict)
