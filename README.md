@@ -1,3 +1,4 @@
+
 # fusion2urdf
 
 ### Updated!!!
@@ -9,21 +10,21 @@
   * now launched by roslaunch {robot_name}_description display.launch
   * changed fusion2urdf output from urdf to xacro for more flexibility
   * separate out material, transmissions, gazebo elements to separate files
-* 2018/10/20: Fixed funcctions to generate launch files
+* 2018/10/20: Fixed functions to generate launch files
 * 2018/09/25: Supports joint types "Rigid", "Slider" & Supports the joints' limit(for "Revolute" and "Slider"). 
 * 2018/09/19: Fixed the bugs about the center of the mass and the inertia. 
 
 ## What is this script?
 This is a fusion 360 script to export urdf from fusion 360 directly.
 
-This exportes:
+This exports:
 * .urdf file of your model
 * .launch and .yaml files to simulate your robot on gazebo
 * .stl files of your model
 
 ### Sample 
 
-The following test model doesn't stand upright because z axis is not upright in default fusion 360.
+The following test model doesn't stand upright because the z axis is not upright in default fusion 360.
 Make sure z axis is upright in your fusion 360 model if you want. 
 
 #### original model
@@ -41,7 +42,7 @@ Make sure z axis is upright in your fusion 360 model if you want.
 
 ## Before using this script
 
-Before using this script, make sure that your model has all the "links" as componens. You have to define the links by creating corresiponding components. For example, this model(https://grabcad.com/library/spotmini-robot-1) is not supported unless you define the "base_link". 
+Before using this script, make sure that your model has all the "links" as components. You have to define the links by creating corresiponding components. For example, this model(https://grabcad.com/library/spotmini-robot-1) is not supported unless you define the "base_link". 
 
 In addition to that, you should be careful when define your joints. The **parent links** should be set as **Component2** when you define the joint, not as Component1. For example, if you define the "base_link" as Component1 when you define the joints, an error saying "KeyError: base_link__1" will show up.
 
@@ -133,7 +134,7 @@ roslaunch (whatever your robot_name is)_description display.launch
 
 If you want to simulate your robot on gazebo, just run
 ```bash
-roslaunch (whatever your robot_name is)_description display.launch
+roslaunch (whatever your robot_name is)_description gazebo.launch
 ```
 
 **Enjoy your Fusion 360 and ROS life!**
