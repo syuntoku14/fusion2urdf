@@ -1,10 +1,17 @@
 # fusion2urdf
 
 ### Updated!!!
-
-* 2018/09/19: Fixed the bugs about the center of the mass and the inertia. 
+* 2020/01/04: Multiple updates:
+  * no longer a need to run a bash script to convert stls
+  * some cleanup around joint and transmission generation
+  * defines a sample material tag instead of defining a material in each link
+  * fusion2urdf now generates a self-contained ROS {robot_name}_description package
+  * now launched by roslaunch {robot_name}_description display.launch
+  * changed fusion2urdf output from urdf to xacro for more flexibility
+  * separate out material, transmissions, gazebo elements to separate files
+* 2018/10/20: Fixed funcctions to generate launch files
 * 2018/09/25: Supports joint types "Rigid", "Slider" & Supports the joints' limit(for "Revolute" and "Slider"). 
-* 2018/10/20: Fixed fucnctions to generate launch files
+* 2018/09/19: Fixed the bugs about the center of the mass and the inertia. 
 
 ## What is this script?
 This is a fusion 360 script to export urdf from fusion 360 directly.
@@ -13,8 +20,6 @@ This exportes:
 * .urdf file of your model
 * .launch and .yaml files to simulate your robot on gazebo
 * .stl files of your model
-
-**convertSTL.rb** was created by [@Chris Polis](https://github.com/cmpolis/convertSTL#author)
 
 ### Sample 
 
@@ -38,7 +43,7 @@ Make sure z axis is upright in your fusion 360 model if you want.
 
 Before using this script, make sure that your model has all the "links" as componens. You have to define the links by creating corresiponding components. For example, this model(https://grabcad.com/library/spotmini-robot-1) is not supported unless you define the "base_link". 
 
-In addition to that, you should be carefult when define your joints. The **parent links** should be set as **Component2** when you define the joint, not as Component1. For example, if you define the "base_link" as Component1 when you define the joints, an error saying "KeyError: base_link__1" will show up.
+In addition to that, you should be careful when define your joints. The **parent links** should be set as **Component2** when you define the joint, not as Component1. For example, if you define the "base_link" as Component1 when you define the joints, an error saying "KeyError: base_link__1" will show up.
 
 <img src="https://github.com/syuntoku14/fusion2urdf/blob/images/spot_mini.PNG" alt="spot_mini" title="spot_mini" width="300" height="300">
 
@@ -69,25 +74,25 @@ Run the following command in your shell.
 
 ```powershell
 cd <path to fusion2urdf>
-Copy-Item ".\URDF_Exporter\" -Destination "${env:APPDATA}\Autodesk\Autodesk Fusion 360\API\Scripts\" -Recurse
+Copy-Item ".\fusion2urdf\" -Destination "${env:APPDATA}\Autodesk\Autodesk Fusion 360\API\Scripts\" -Recurse
 ```
 
 ###### macOS (In Bash)
 
 ```bash
 cd <path to fusion2urdf>
-cp -r ../URDF_Exporter "$HOME/Library/Application Support/Autodesk/Autodesk Fusion 360/API/Scripts/"
+cp -r ../fusion2urdf "$HOME/Library/Application Support/Autodesk/Autodesk Fusion 360/API/Scripts/"
 ```
 
 ##### Run
 
-Click ADD-INS in fusion 360, then choose URDF_Exporter. 
+Click ADD-INS in fusion 360, then choose ****fusion2urdf****. 
 
 **This script will change your model. So before run it, copy your model to backup.**
 
 <img src="https://github.com/syuntoku14/fusion2urdf/blob/images/copy.png" alt="copy" title="copy" width="300" height="300">
 
-Run the script and wait a few seconds(or a few minutes). Then a folder dialog will show up. Choose where you want to save the urdf(A folder "Desktop/test" is chosen in this example").
+Run the script and wait a few seconds(or a few minutes). Then a folder dialog will show up. Choose where you want to save the urdf (A folder "Desktop/test" is chosen in this example").
 Maybe some error will occur when you run the script. Fix them according to the instruction. In this case, something wrong with joint "Rev 7". Probably it can be solved by just redefining the joint.
 
 ![error](https://github.com/syuntoku14/fusion2urdf/blob/images/error.png)
@@ -109,48 +114,26 @@ The folder "Desktop/test" will be required in the next step. Move them into your
 
 #### In your ROS environment
 
-Place this repository at your own ROS workspace. "catkin_ws" is used in this example.
+Place the generated _description package directory in your own ROS workspace. "catkin_ws" is used in this example.
 Then, run catkin_make in catkin_ws.
 
 ```bash
-cd ~/catkin_ws/src
-git clone git@github.com:syuntoku14/fusion2urdf.git
-cd ..
+cd ~/catkin_ws/
 catkin_make
 source devel/setup.bash
 ```
 
-Next, copy the repository named your robot's name that you made in the previous step and paste it at "~/catkin_ws/src/fusion2urdf". In this example, I copied "industrial_robot" which is located in the "test" folder.  
-
-<img src="https://github.com/syuntoku14/fusion2urdf/blob/images/fusion2urdf.png" alt="folder" title="folder" width="300" height="150">
-
-Then, run the "stl2binary.bash" with your robot's name. You need to install Ruby because there is a ruby code "convertSTL.rb". 
-
-```bash
-cd ~/catkin_ws/src/fusion2urdf
-bash stl2binary.bash industrial_robot
-```
-
-The bin_stl in your robot's name folder contains binary stl files for urdf \<mesh\> tags.
-
 Now you can see your robot in rviz. You can see it by the following command.
 
 ```bash
-cd ~/catkin_ws/src/fusion2urdf/industrial_robot
-roslaunch urdf_tutorial display.launch model:=industrial_robot.urdf
+roslaunch (whatever your robot_name is)_description display.launch
 ```
 
 <img src="https://github.com/syuntoku14/fusion2urdf/blob/images/rviz_robot.png" alt="rviz" title="rviz" width="300" height="300">
 
-If you want to simulate your robot on gazebo, place exported .launch and .yaml files at ~/catkin_ws/src/fusion2urdf/launch.
-Then run "roslaunch industrial_robot.launch".
-
+If you want to simulate your robot on gazebo, just run
 ```bash
-mkdir ~/catkin_ws/src/fusion2urdf/launch
-
-cp ~/catkin_ws/src/fusion2urdf/industrial_robot/industrial_robot.launch ~/catkin_ws/src/fusion2urdf/industrial_robot/industrial_robot_controller.yaml ~/catkin_ws/src/fusion2urdf/launch/
-
-roslaunch ~/catkin_ws/src/fusion2urdf/launch/industrial_robot
+roslaunch (whatever your robot_name is)_description display.launch
 ```
 
 **Enjoy your Fusion 360 and ROS life!**
