@@ -104,7 +104,7 @@ to swap component1<=>component2"
             f.write(joint.joint_xml)
             f.write('\n')
 
-def write_gazebo_plugin_and_endtag(file_name):
+def write_gazebo_endtag(file_name):
     """
     Write about gazebo_plugin and the </robot> tag at the end of the urdf
     
@@ -115,12 +115,6 @@ def write_gazebo_plugin_and_endtag(file_name):
         urdf full path
     """
     with open(file_name, mode='a') as f:
-        # gazebo plugin
-        gazebo = Element('gazebo')
-        plugin = SubElement(gazebo, 'plugin')
-        plugin.attrib = {'name':'control', 'filename':'libgazebo_ros_control.so'}
-        gazebo_xml = "\n".join(utils.prettify(gazebo).split("\n")[1:])
-        f.write(gazebo_xml)
         f.write('</robot>\n')
         
 
@@ -143,7 +137,7 @@ def write_urdf(joints_dict, links_xyz_dict, inertial_dict, package_name, robot_n
 
     write_link_urdf(joints_dict, repo, links_xyz_dict, file_name, inertial_dict)
     write_joint_urdf(joints_dict, repo, links_xyz_dict, file_name)
-    write_gazebo_plugin_and_endtag(file_name)
+    write_gazebo_endtag(file_name)
 
 def write_materials_xacro(joints_dict, links_xyz_dict, inertial_dict, package_name, robot_name, save_dir):
     try: os.mkdir(save_dir + '/urdf')
@@ -319,7 +313,11 @@ def write_gazebo_launch(package_name, robot_name, save_dir):
     
     launch = Element('launch')
     param = SubElement(launch, 'param')
-    param.attrib = {'name':'robot_description', 'textfile':'$(find {})/urdf/{}.xacro'.format(package_name, robot_name)}
+    param.attrib = {'name':'robot_description', 'command':'$(find xacro)/xacro $(find {})/urdf/{}.xacro'.format(package_name, robot_name)}
+
+    node = SubElement(launch, 'node')
+    node.attrib = {'name':'spawn_urdf', 'pkg':'gazebo_ros', 'type':'spawn_model',\
+                    'args':'-param robot_description -urdf -model {}'.format(robot_name)}
 
     include_ =  SubElement(launch, 'include')
     include_.attrib = {'file':'$(find gazebo_ros)/launch/empty_world.launch'}        
@@ -335,9 +333,7 @@ def write_gazebo_launch(package_name, robot_name, save_dir):
         arg.attrib = {'name' : args_name_value_pairs[i][0] , 
         'value' : args_name_value_pairs[i][1]}
 
-    node = SubElement(launch, 'node')
-    node.attrib = {'name':'spawn_urdf', 'pkg':'gazebo_ros', 'type':'spawn_model',\
-                    'args':'-param robot_description -urdf -model {}'.format(robot_name)}
+
     
     launch_xml = "\n".join(utils.prettify(launch).split("\n")[1:])        
     
