@@ -360,12 +360,12 @@ def write_control_launch(package_name, robot_name, save_dir, joints_dict):
     try: os.mkdir(save_dir + '/launch')
     except: pass     
     
-    launch = Element('launch')
+    #launch = Element('launch')
 
     controller_name = robot_name + '_controller'
-    rosparam = SubElement(launch, 'rosparam')
-    rosparam.attrib = {'file':'$(find {})/launch/controller.yaml'.format(package_name),
-                       'command':'load'}
+    #rosparam = SubElement(launch, 'rosparam')
+    #rosparam.attrib = {'file':'$(find {})/launch/controller.yaml'.format(package_name),
+    #                   'command':'load'}
                        
     controller_args_str = ""
     for j in joints_dict:
@@ -374,23 +374,32 @@ def write_control_launch(package_name, robot_name, save_dir, joints_dict):
             controller_args_str += j + '_position_controller '
     controller_args_str += 'joint_state_controller '
 
-    node_controller = SubElement(launch, 'node')
+    node_controller = Element('node')
     node_controller.attrib = {'name':'controller_spawner', 'pkg':'controller_manager', 'type':'spawner',\
                     'respawn':'false', 'output':'screen', 'ns':robot_name,\
                     'args':'{}'.format(controller_args_str)}
     
-    node_publisher = SubElement(launch, 'node')
+    node_publisher = Element('node')
     node_publisher.attrib = {'name':'robot_state_publisher', 'pkg':'robot_state_publisher',\
                     'type':'robot_state_publisher', 'respawn':'false', 'output':'screen'}
     remap = SubElement(node_publisher, 'remap')
     remap.attrib = {'from':'/joint_states',\
                     'to':'/' + robot_name + '/joint_states'}
     
-    launch_xml = "\n".join(utils.prettify(launch).split("\n")[1:])        
-    
+    #launch_xml  = "\n".join(utils.prettify(launch).split("\n")[1:])   
+    launch_xml  = "\n".join(utils.prettify(node_controller).split("\n")[1:])   
+    launch_xml += "\n".join(utils.prettify(node_publisher).split("\n")[1:])   
+
     file_name = save_dir + '/launch/controller.launch'    
     with open(file_name, mode='w') as f:
+        f.write('<launch>\n')
+        f.write('\n')
+        #for some reason ROS is very picky about the attribute ordering, so we'll bitbang this element
+        f.write('<rosparam file="$(find {})/launch/controller.yaml" command="load"/>'.format(package_name))
+        f.write('\n')
         f.write(launch_xml)
+        f.write('\n')
+        f.write('</launch>')
         
 
 def write_yaml(package_name, robot_name, save_dir, joints_dict):
@@ -424,8 +433,8 @@ def write_yaml(package_name, robot_name, save_dir, joints_dict):
         for joint in joints_dict:
             joint_type = joints_dict[joint]['type']
             if joint_type != 'fixed':
-                f.write('    ' + joint + '_position_controller:\n')
-                f.write('      type: effort_controllers/JointPositionController\n')
-                f.write('      joint: '+ joint + '\n')
-                f.write('      pid: {p: 100.0, i: 0.01, d: 10.0}\n')
+                f.write('  ' + joint + '_position_controller:\n')
+                f.write('    type: effort_controllers/JointPositionController\n')
+                f.write('    joint: '+ joint + '\n')
+                f.write('    pid: {p: 100.0, i: 0.01, d: 10.0}\n')
 
