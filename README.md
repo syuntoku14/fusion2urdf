@@ -75,14 +75,14 @@ Run the following command in your shell.
 
 ```powershell
 cd <path to fusion2urdf>
-Copy-Item ".\fusion2urdf\" -Destination "${env:APPDATA}\Autodesk\Autodesk Fusion 360\API\Scripts\" -Recurse
+Copy-Item ".\URDF_Exporter\" -Destination "${env:APPDATA}\Autodesk\Autodesk Fusion 360\API\Scripts\" -Recurse
 ```
 
 ###### macOS (In Bash)
 
 ```bash
 cd <path to fusion2urdf>
-cp -r ../fusion2urdf "$HOME/Library/Application Support/Autodesk/Autodesk Fusion 360/API/Scripts/"
+cp -r ../URDF_Exporter "$HOME/Library/Application Support/Autodesk/Autodesk Fusion 360/API/Scripts/"
 ```
 
 ##### Run
