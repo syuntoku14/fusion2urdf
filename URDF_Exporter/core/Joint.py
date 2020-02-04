@@ -154,7 +154,7 @@ def make_joints_dict(root, msg):
                 
         elif joint_type == 'prismatic':
             joint_dict['axis'] = [round(i, 6) for i in \
-                joint.jointMotion.slideDirectionVector.asArray()]  #TODO: Not tested yet. Will this be also normalized?
+                joint.jointMotion.slideDirectionVector.asArray()]  # Also normalized
             max_enabled = joint.jointMotion.slideLimits.isMaximumValueEnabled
             min_enabled = joint.jointMotion.slideLimits.isMinimumValueEnabled            
             if max_enabled and min_enabled:  
