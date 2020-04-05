@@ -86,12 +86,12 @@ class Joint:
         joint = SubElement(tran, 'joint')
         joint.attrib = {'name':self.name}
         hardwareInterface_joint = SubElement(joint, 'hardwareInterface')
-        hardwareInterface_joint.text = 'PositionJointInterface'
+        hardwareInterface_joint.text = 'hardware_interface/EffortJointInterface'
         
         actuator = SubElement(tran, 'actuator')
         actuator.attrib = {'name':self.name + '_actr'}
         hardwareInterface_actr = SubElement(actuator, 'hardwareInterface')
-        hardwareInterface_actr.text = 'PositionJointInterface'
+        hardwareInterface_actr.text = 'hardware_interface/EffortJointInterface'
         mechanicalReduction = SubElement(actuator, 'mechanicalReduction')
         mechanicalReduction.text = '1'
         
