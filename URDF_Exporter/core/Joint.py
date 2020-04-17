@@ -136,8 +136,8 @@ def make_joints_dict(root, msg):
         
         # support  "Revolute", "Rigid" and "Slider"
         if joint_type == 'revolute':
-            joint_dict['axis'] = [round(i / 100.0, 6) for i in \
-                joint.jointMotion.rotationAxisVector.asArray()]  # converted to meter
+            joint_dict['axis'] = [round(i, 6) for i in \
+                joint.jointMotion.rotationAxisVector.asArray()] ## In Fusion, exported axis is normalized.
             max_enabled = joint.jointMotion.rotationLimits.isMaximumValueEnabled
             min_enabled = joint.jointMotion.rotationLimits.isMinimumValueEnabled            
             if max_enabled and min_enabled:  
@@ -153,8 +153,8 @@ def make_joints_dict(root, msg):
                 joint_dict['type'] = 'continuous'
                 
         elif joint_type == 'prismatic':
-            joint_dict['axis'] = [round(i / 100.0, 6) for i in \
-                joint.jointMotion.slideDirectionVector.asArray()]  # converted to meter
+            joint_dict['axis'] = [round(i, 6) for i in \
+                joint.jointMotion.slideDirectionVector.asArray()]  # Also normalized
             max_enabled = joint.jointMotion.slideLimits.isMaximumValueEnabled
             min_enabled = joint.jointMotion.slideLimits.isMinimumValueEnabled            
             if max_enabled and min_enabled:  
