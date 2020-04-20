@@ -1,6 +1,9 @@
 
 # fusion2urdf
 
+I have stopped developing this repo, but any contributions are welcome.
+This repo only supports Gazebo, if you are using pybullet, see: https://github.com/yanshil/Fusion2PyBullet.
+
 ### Updated!!!
 * 2020/01/04: Multiple updates:
   * no longer a need to run a bash script to convert stls
