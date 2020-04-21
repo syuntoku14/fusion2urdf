@@ -62,7 +62,7 @@ but this doesn't work since the "face (3):1" component contains other components
 
 Sometimes this script exports abnormal urdf without any error messages. In that case, the joints should have problems. Redefine the joints and run again.
 
-In addition to that, make sure that this script currently supports only "Rigid", "Slider" and "Revolute". I will add new joint types someday.
+In addition to that, make sure that this script currently supports only "Rigid", "Slider" and "Revolute".
 
 ## How to use
 
