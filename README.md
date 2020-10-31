@@ -1,10 +1,14 @@
-
 # fusion2urdf
 
 I have stopped developing this repo, but any contributions are welcome.
 This repo only supports Gazebo, if you are using pybullet, see: https://github.com/yanshil/Fusion2PyBullet.
 
-### Updated!!!
+
+## Updated!!!
+* 2020/11/10: README fix
+  * MacOS Installation command fixed in README
+  * Date format unified in README to yyyy/dd/mm
+  * Shifted Installation Upwards for better User Experience and easier to find
 * 2020/01/04: Multiple updates:
   * no longer a need to run a bash script to convert stls
   * some cleanup around joint and transmission generation
@@ -13,9 +17,28 @@ This repo only supports Gazebo, if you are using pybullet, see: https://github.c
   * now launched by roslaunch {robot_name}_description display.launch
   * changed fusion2urdf output from urdf to xacro for more flexibility
   * separate out material, transmissions, gazebo elements to separate files
-* 2018/10/20: Fixed functions to generate launch files
-* 2018/09/25: Supports joint types "Rigid", "Slider" & Supports the joints' limit(for "Revolute" and "Slider"). 
-* 2018/09/19: Fixed the bugs about the center of the mass and the inertia. 
+* 2018/20/10: Fixed functions to generate launch files
+* 2018/25/09: Supports joint types "Rigid", "Slider" & Supports the joints' limit(for "Revolute" and "Slider"). 
+* 2018/19/09: Fixed the bugs about the center of the mass and the inertia.
+
+
+## Installation
+
+Run the following command in your shell.
+
+##### Windows (In PowerShell)
+
+```powershell
+cd <path to fusion2urdf>
+Copy-Item ".\URDF_Exporter\" -Destination "${env:APPDATA}\Autodesk\Autodesk Fusion 360\API\Scripts\" -Recurse
+```
+
+##### macOS (In bash or zsh)
+
+```bash
+cd <path to fusion2urdf>
+cp -r ./URDF_Exporter "$HOME/Library/Application Support/Autodesk/Autodesk Fusion 360/API/Scripts/"
+```
 
 ## What is this script?
 This is a fusion 360 script to export urdf from fusion 360 directly.
@@ -43,6 +66,7 @@ Make sure z axis is upright in your fusion 360 model if you want.
 * inertia
 <img src="https://github.com/syuntoku14/fusion2urdf/blob/images/inertia.png" alt="inertia" title="inertia" width="300" height="300">
 
+
 ## Before using this script
 
 Before using this script, make sure that your model has all the "links" as components. You have to define the links by creating corresiponding components. For example, this model(https://grabcad.com/library/spotmini-robot-1) is not supported unless you define the "base_link". 
@@ -64,31 +88,17 @@ Sometimes this script exports abnormal urdf without any error messages. In that 
 
 In addition to that, make sure that this script currently supports only "Rigid", "Slider" and "Revolute".
 
+
 ## How to use
 
 As an example, I'll export a urdf file from this cool fusion360 robot-arm model(https://grabcad.com/library/industrial-robot-10).
 This was created by [sanket patil](https://grabcad.com/sanket.patil-16)
 
-#### In Fusion 360
-##### Install
+### Install in Shell 
 
-Run the following command in your shell.
+Run the [installation command](#installation) in your shell.
 
-###### Windows (In PowerShell)
-
-```powershell
-cd <path to fusion2urdf>
-Copy-Item ".\URDF_Exporter\" -Destination "${env:APPDATA}\Autodesk\Autodesk Fusion 360\API\Scripts\" -Recurse
-```
-
-###### macOS (In Bash)
-
-```bash
-cd <path to fusion2urdf>
-cp -r ../URDF_Exporter "$HOME/Library/Application Support/Autodesk/Autodesk Fusion 360/API/Scripts/"
-```
-
-##### Run
+### Run in Fusion 360
 
 Click ADD-INS in fusion 360, then choose ****fusion2urdf****. 
 
