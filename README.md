@@ -5,6 +5,10 @@ This repo only supports Gazebo, if you are using pybullet, see: https://github.c
 
 
 ## Updated!!!
+* 2021/01/09: Fix xyz calculation. 
+  * If you see that your components move arround the map center in rviz try this update 
+  * More Infos see: https://forums.autodesk.com/t5/fusion-360-api-and-scripts/difference-of-geometryororiginone-and-geometryororiginonetwo/m-p/9837767
+
 * 2020/11/10: README fix
   * MacOS Installation command fixed in README
   * Date format unified in README to yyyy/dd/mm
