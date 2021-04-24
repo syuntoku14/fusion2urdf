@@ -155,3 +155,18 @@ roslaunch (whatever your robot_name is)_description gazebo.launch
 ```
 
 **Enjoy your Fusion 360 and ROS life!**
+
+
+
+# Citation
+
+```
+@misc{toshinori2020fusion2urdf,
+    author = {Toshinori Kitamura},
+    title = {Fusion2URDF},
+    year = {2020},
+    publisher = {GitHub},
+    journal = {GitHub repository},
+    howpublished = {\url{https://github.com/syuntoku14/fusion2urdf}}
+}
+```
