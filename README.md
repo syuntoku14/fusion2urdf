@@ -4,12 +4,12 @@
 
 * 2018/09/19: Fixed the bugs about the center of the mass and the inertia. 
 * 2018/09/25: Supports joint types "Rigid", "Slider" & Supports the joints' limit(for "Revolute" and "Slider"). 
-* 2018/10/20: Fixed fucnctions to generate launch files
+* 2018/10/20: Fixed functions to generate launch files
 
 ## What is this script?
 This is a fusion 360 script to export urdf from fusion 360 directly.
 
-This exportes:
+This exports:
 * .urdf file of your model
 * .launch and .yaml files to simulate your robot on gazebo
 * .stl files of your model
@@ -18,8 +18,8 @@ This exportes:
 
 ### Sample 
 
-The following test model doesn't stand upright because z axis is not upright in default fusion 360.
-Make sure z axis is upright in your fusion 360 model if you want. 
+The following test model doesn't stand upright because the z-axis is not upright in default fusion 360.
+Make sure the z-axis is upright in your fusion 360 model if you want. 
 
 #### original model
 <img src="https://github.com/syuntoku14/fusion2urdf/blob/images/industrial_robot.png" alt="industrial_robot" title="industrial_robot" width="300" height="300">
@@ -36,9 +36,9 @@ Make sure z axis is upright in your fusion 360 model if you want.
 
 ## Before using this script
 
-Before using this script, make sure that your model has all the "links" as componens. You have to define the links by creating corresiponding components. For example, this model(https://grabcad.com/library/spotmini-robot-1) is not supported unless you define the "base_link". 
+Before using this script, make sure that your model has all the "links" as components. You have to define the links by creating corresponding components. For example, this model(https://grabcad.com/library/spotmini-robot-1) is not supported unless you define the "base_link". 
 
-In addition to that, you should be carefult when define your joints. The **parent links** should be set as **Component2** when you define the joint, not as Component1. For example, if you define the "base_link" as Component1 when you define the joints, an error saying "KeyError: base_link__1" will show up.
+In addition to that, you should be careful when defining your joints. The **parent links** should be set as **Component2** when you define the joint, not as Component1. For example, if you define the "base_link" as Component1 when you define the joints, an error saying "KeyError: base_link__1" will show up.
 
 <img src="https://github.com/syuntoku14/fusion2urdf/blob/images/spot_mini.PNG" alt="spot_mini" title="spot_mini" width="300" height="300">
 
@@ -83,7 +83,7 @@ cp -r ../URDF_Exporter "$HOME/Library/Application Support/Autodesk/Autodesk Fusi
 
 Click ADD-INS in fusion 360, then choose URDF_Exporter. 
 
-**This script will change your model. So before run it, copy your model to backup.**
+**This script will change your model. So before running it, copy your model to backup.**
 
 <img src="https://github.com/syuntoku14/fusion2urdf/blob/images/copy.png" alt="copy" title="copy" width="300" height="300">
 
@@ -96,13 +96,13 @@ Maybe some error will occur when you run the script. Fix them according to the i
 
 <img src="https://github.com/syuntoku14/fusion2urdf/blob/images/cautions.PNG" alt="cautions" title="cautions" width="300" height="300">
 
-In the above image, base_link is gounded. Right click it and click "Unground". 
+In the above image, base_link is grounded. Right-click it and click "Unground". 
 
-Now you can run the script. Let's run the script. Choose the folder to save and wait a few second. You will see many "old_component" the components field but please ignore them. 
+Now you can run the script. Let's run the script. Choose the folder to save and wait for a few seconds. You will see many "old_components" in the components field, please ignore them. 
 
 <img src="https://github.com/syuntoku14/fusion2urdf/blob/images/result.PNG" alt="results" title="results" width="250" height="300">
 
-You have successfully exported the urdf file. Also, you got stl files in "Desktop/test/mm_stl" repository. This will be required at the next step. The existing fusion CAD file is no more needed. You can delete it. 
+You have successfully exported the urdf file. Also, you got `.stl` files in the "Desktop/test/mm_stl" repository. This will be required at the next step. The existing fusion CAD file is no more needed. You can delete it. 
 
 The folder "Desktop/test" will be required in the next step. Move them into your ros environment.
 
@@ -131,7 +131,7 @@ cd ~/catkin_ws/src/fusion2urdf
 bash stl2binary.bash industrial_robot
 ```
 
-The bin_stl in your robot's name folder contains binary stl files for urdf \<mesh\> tags.
+The bin_stl in your robot's name folder contains binary `.stl` files for urdf \<mesh\> tags.
 
 Now you can see your robot in rviz. You can see it by the following command.
 
