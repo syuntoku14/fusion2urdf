@@ -89,6 +89,9 @@ The ankle joint below has 4 spherical joints and only two of them were defined a
 
 ![youtube-video-gif](https://user-images.githubusercontent.com/37873142/133144404-45d9e444-8ddb-4b5f-8970-6e637b750faa.gif)
 
+
+### "In some cases, before export Turn off "Capture design history" "
+
 ## How to use
 
 As an example, I'll export a urdf file from this cool fusion360 robot-arm model(https://grabcad.com/library/industrial-robot-10).
