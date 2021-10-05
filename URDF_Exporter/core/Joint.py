@@ -86,12 +86,12 @@ class Joint:
         joint = SubElement(tran, 'joint')
         joint.attrib = {'name':self.name}
         hardwareInterface_joint = SubElement(joint, 'hardwareInterface')
-        hardwareInterface_joint.text = 'PositionJointInterface'
+        hardwareInterface_joint.text = 'hardware_interface/EffortJointInterface'
         
         actuator = SubElement(tran, 'actuator')
         actuator.attrib = {'name':self.name + '_actr'}
         hardwareInterface_actr = SubElement(actuator, 'hardwareInterface')
-        hardwareInterface_actr.text = 'PositionJointInterface'
+        hardwareInterface_actr.text = 'hardware_interface/EffortJointInterface'
         mechanicalReduction = SubElement(actuator, 'mechanicalReduction')
         mechanicalReduction.text = '1'
         
@@ -136,8 +136,8 @@ def make_joints_dict(root, msg):
         
         # support  "Revolute", "Rigid" and "Slider"
         if joint_type == 'revolute':
-            joint_dict['axis'] = [round(i / 100.0, 6) for i in \
-                joint.jointMotion.rotationAxisVector.asArray()]  # converted to meter
+            joint_dict['axis'] = [round(i, 6) for i in \
+                joint.jointMotion.rotationAxisVector.asArray()] ## In Fusion, exported axis is normalized.
             max_enabled = joint.jointMotion.rotationLimits.isMaximumValueEnabled
             min_enabled = joint.jointMotion.rotationLimits.isMinimumValueEnabled            
             if max_enabled and min_enabled:  
@@ -153,8 +153,8 @@ def make_joints_dict(root, msg):
                 joint_dict['type'] = 'continuous'
                 
         elif joint_type == 'prismatic':
-            joint_dict['axis'] = [round(i / 100.0, 6) for i in \
-                joint.jointMotion.slideDirectionVector.asArray()]  # converted to meter
+            joint_dict['axis'] = [round(i, 6) for i in \
+                joint.jointMotion.slideDirectionVector.asArray()]  # Also normalized
             max_enabled = joint.jointMotion.slideLimits.isMaximumValueEnabled
             min_enabled = joint.jointMotion.slideLimits.isMinimumValueEnabled            
             if max_enabled and min_enabled:  
@@ -175,9 +175,47 @@ def make_joints_dict(root, msg):
             joint_dict['parent'] = re.sub('[ :()]', '_', joint.occurrenceTwo.name)
         joint_dict['child'] = re.sub('[ :()]', '_', joint.occurrenceOne.name)
         
+        
+        #There seem to be a problem with geometryOrOriginTwo. To calcualte the correct orogin of the generated stl files following approach was used.
+        #https://forums.autodesk.com/t5/fusion-360-api-and-scripts/difference-of-geometryororiginone-and-geometryororiginonetwo/m-p/9837767
+        #Thanks to Masaki Yamamoto!
+        
+        # Coordinate transformation by matrix
+        # M: 4x4 transformation matrix
+        # a: 3D vector
+        def trans(M, a):
+            ex = [M[0],M[4],M[8]]
+            ey = [M[1],M[5],M[9]]
+            ez = [M[2],M[6],M[10]]
+            oo = [M[3],M[7],M[11]]
+            b = [0, 0, 0]
+            for i in range(3):
+                b[i] = a[0]*ex[i]+a[1]*ey[i]+a[2]*ez[i]+oo[i]
+            return(b)
+
+
+        # Returns True if two arrays are element-wise equal within a tolerance
+        def allclose(v1, v2, tol=1e-6):
+            return( max([abs(a-b) for a,b in zip(v1, v2)]) < tol )
+
         try:
-            joint_dict['xyz'] = [round(i / 100.0, 6) for i in \
-            joint.geometryOrOriginOne.origin.asArray()]  # converted to meter
+            xyz_from_one_to_joint = joint.geometryOrOriginOne.origin.asArray() # Relative Joint pos
+            xyz_from_two_to_joint = joint.geometryOrOriginTwo.origin.asArray() # Relative Joint pos
+            xyz_of_one            = joint.occurrenceOne.transform.translation.asArray() # Link origin
+            xyz_of_two            = joint.occurrenceTwo.transform.translation.asArray() # Link origin
+            M_two = joint.occurrenceTwo.transform.asArray() # Matrix as a 16 element array.
+
+        # Compose joint position
+            case1 = allclose(xyz_from_two_to_joint, xyz_from_one_to_joint)
+            case2 = allclose(xyz_from_two_to_joint, xyz_of_one)
+            if case1 or case2:
+                xyz_of_joint = xyz_from_two_to_joint
+            else:
+                xyz_of_joint = trans(M_two, xyz_from_two_to_joint)
+
+
+            joint_dict['xyz'] = [round(i / 100.0, 6) for i in xyz_of_joint]  # converted to meter
+
         except:
             try:
                 if type(joint.geometryOrOriginTwo)==adsk.fusion.JointOrigin:

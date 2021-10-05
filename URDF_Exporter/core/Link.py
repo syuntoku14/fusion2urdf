@@ -66,11 +66,9 @@ class Link:
         origin_v.attrib = {'xyz':' '.join([str(_) for _ in self.xyz]), 'rpy':'0 0 0'}
         geometry_v = SubElement(visual, 'geometry')
         mesh_v = SubElement(geometry_v, 'mesh')
-        mesh_v.attrib = {'filename':'package://' + self.repo + self.name + '_m-binary.stl'}
+        mesh_v.attrib = {'filename':'package://' + self.repo + self.name + '.stl','scale':'0.001 0.001 0.001'}
         material = SubElement(visual, 'material')
         material.attrib = {'name':'silver'}
-        color = SubElement(material, 'color')
-        color.attrib = {'rgba':'1 0 0 1'}
         
         # collision
         collision = SubElement(link, 'collision')
@@ -78,7 +76,7 @@ class Link:
         origin_c.attrib = {'xyz':' '.join([str(_) for _ in self.xyz]), 'rpy':'0 0 0'}
         geometry_c = SubElement(collision, 'geometry')
         mesh_c = SubElement(geometry_c, 'mesh')
-        mesh_c.attrib = {'filename':'package://' + self.repo + self.name + '_m-binary.stl'}
+        mesh_c.attrib = {'filename':'package://' + self.repo + self.name + '.stl','scale':'0.001 0.001 0.001'}
 
         # print("\n".join(utils.prettify(link).split("\n")[1:]))
         self.link_xml = "\n".join(utils.prettify(link).split("\n")[1:])
@@ -107,16 +105,19 @@ def make_inertial_dict(root, msg):
     for occs in allOccs:
         # Skip the root component.
         occs_dict = {}
-        prop = occs.getPhysicalProperties(adsk.fusion.CalculationAccuracy.HighCalculationAccuracy)
-        mass = round(prop.mass, 6)  #kg
-        center_of_mass = [round(_ / 100.0, 6) for _ in prop.centerOfMass.asArray()]
-        occs_dict['center_of_mass'] = center_of_mass
-        inertia_world = [i / 10000.0 for i in \
-            prop.getXYZMomentsOfInertia()[1:]]  #kg m^2
-        # xx yy zz xy xz yz(default)
-        inertia_world[4], inertia_world[5] = inertia_world[5], inertia_world[4]
+        prop = occs.getPhysicalProperties(adsk.fusion.CalculationAccuracy.VeryHighCalculationAccuracy)
+        
+        occs_dict['name'] = re.sub('[ :()]', '_', occs.name)
+
+        mass = prop.mass  # kg
         occs_dict['mass'] = mass
-        occs_dict['inertia'] = utils.origin2center_of_mass(inertia_world, center_of_mass, mass)  
+        center_of_mass = [_/100.0 for _ in prop.centerOfMass.asArray()] ## cm to m
+        occs_dict['center_of_mass'] = center_of_mass
+
+        # https://help.autodesk.com/view/fusion360/ENU/?guid=GUID-ce341ee6-4490-11e5-b25b-f8b156d7cd97
+        (_, xx, yy, zz, xy, yz, xz) = prop.getXYZMomentsOfInertia()
+        moment_inertia_world = [_ / 10000.0 for _ in [xx, yy, zz, xy, yz, xz] ] ## kg / cm^2 -> kg/m^2
+        occs_dict['inertia'] = utils.origin2center_of_mass(moment_inertia_world, center_of_mass, mass)
         
         if occs.component.name == 'base_link':
             inertial_dict['base_link'] = occs_dict

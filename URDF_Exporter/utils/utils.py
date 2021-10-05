@@ -9,7 +9,9 @@ import adsk, adsk.core, adsk.fusion
 import os.path, re
 from xml.etree import ElementTree
 from xml.dom import minidom
-
+from distutils.dir_util import copy_tree
+import fileinput
+import sys
 
 def copy_occs(root):    
     """    
@@ -32,7 +34,7 @@ def copy_occs(root):
             new_occs.component.name = 'base_link'
         else:
             new_occs.component.name = re.sub('[ :()]', '_', occs.name)
-        new_occs = allOccs[-1]
+        new_occs = allOccs.item((allOccs.count-1))
         for i in range(bodies.count):
             body = bodies.item(i)
             body.copyToComponent(new_occs)
@@ -65,9 +67,9 @@ def export_stl(design, save_dir, components):
     # create a single exportManager instance
     exportMgr = design.exportManager
     # get the script location
-    try: os.mkdir(save_dir + '/mm_stl')
+    try: os.mkdir(save_dir + '/meshes')
     except: pass
-    scriptDir = save_dir + '/mm_stl'  
+    scriptDir = save_dir + '/meshes'  
     # export the occurrence one by one in the component to a specified file
     for component in components:
         allOccus = component.allOccurrences
@@ -79,7 +81,7 @@ def export_stl(design, save_dir, components):
                     # create stl exportOptions
                     stlExportOptions = exportMgr.createSTLExportOptions(occ, fileName)
                     stlExportOptions.sendToPrintUtility = False
-                    stlExportOptions.isBinaryFormat = False
+                    stlExportOptions.isBinaryFormat = True
                     # options are .MeshRefinementLow .MeshRefinementMedium .MeshRefinementHigh
                     stlExportOptions.meshRefinement = adsk.fusion.MeshRefinementSettings.MeshRefinementLow
                     exportMgr.execute(stlExportOptions)
@@ -142,3 +144,30 @@ def prettify(elem):
     reparsed = minidom.parseString(rough_string)
     return reparsed.toprettyxml(indent="  ")
 
+def copy_package(save_dir, package_dir):
+    try: os.mkdir(save_dir + '/launch')
+    except: pass 
+    try: os.mkdir(save_dir + '/urdf')
+    except: pass 
+    copy_tree(package_dir, save_dir)
+
+def update_cmakelists(save_dir, package_name):
+    file_name = save_dir + '/CMakeLists.txt'
+
+    for line in fileinput.input(file_name, inplace=True):
+        if 'project(fusion2urdf)' in line:
+            sys.stdout.write("project(" + package_name + ")\n")
+        else:
+            sys.stdout.write(line)
+
+def update_package_xml(save_dir, package_name):
+    file_name = save_dir + '/package.xml'
+
+    for line in fileinput.input(file_name, inplace=True):
+        if '<name>' in line:
+            sys.stdout.write("  <name>" + package_name + "</name>\n")
+        elif '<description>' in line:
+            sys.stdout.write("<description>The " + package_name + " package</description>\n")
+        else:
+            sys.stdout.write(line)
+        
