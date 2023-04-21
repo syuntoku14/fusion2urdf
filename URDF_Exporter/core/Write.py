@@ -281,7 +281,7 @@ def write_display_launch(package_name, robot_name, save_dir):
     param2.attrib = {'name':'use_gui', 'value':'$(arg gui)'}
 
     node1 = SubElement(launch, 'node')
-    node1.attrib = {'name':'joint_state_publisher', 'pkg':'joint_state_publisher', 'type':'joint_state_publisher'}
+    node1.attrib = {'name':'joint_state_publisher_gui', 'pkg':'joint_state_publisher_gui', 'type':'joint_state_publisher_gui'}
 
     node2 = SubElement(launch, 'node')
     node2.attrib = {'name':'robot_state_publisher', 'pkg':'robot_state_publisher', 'type':'robot_state_publisher'}
