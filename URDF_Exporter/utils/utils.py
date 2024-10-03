@@ -149,7 +149,7 @@ def copy_package(save_dir, package_dir):
     except: pass 
     try: os.mkdir(save_dir + '/urdf')
     except: pass 
-    copy_tree(package_dir, save_dir)
+    copy_tree(package_dir, save_dir,dirs_exist_ok=True) #api for this function has changed.
 
 def update_cmakelists(save_dir, package_name):
     file_name = save_dir + '/CMakeLists.txt'
