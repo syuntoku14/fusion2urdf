@@ -9,7 +9,7 @@ import adsk, adsk.core, adsk.fusion
 import os.path, re
 from xml.etree import ElementTree
 from xml.dom import minidom
-from distutils.dir_util import copy_tree
+import shutil  # Replaced distutils with shutil
 import fileinput
 import sys
 
@@ -53,8 +53,7 @@ def copy_occs(root):
 
 def export_stl(design, save_dir, components):  
     """
-    export stl files into "sace_dir/"
-    
+    export stl files into "save_dir/"
     
     Parameters
     ----------
@@ -86,8 +85,8 @@ def export_stl(design, save_dir, components):
                     stlExportOptions.meshRefinement = adsk.fusion.MeshRefinementSettings.MeshRefinementLow
                     exportMgr.execute(stlExportOptions)
                 except:
-                    print('Component ' + occ.component.name + 'has something wrong.')
-                
+                    print('Component ' + occ.component.name + ' has something wrong.')
+
 
 def file_dialog(ui):     
     """
@@ -109,12 +108,10 @@ def origin2center_of_mass(inertia, center_of_mass, mass):
     convert the moment of the inertia about the world coordinate into 
     that about center of mass coordinate
 
-
     Parameters
     ----------
     moment of inertia about the world coordinate:  [xx, yy, zz, xy, yz, xz]
     center_of_mass: [x, y, z]
-    
     
     Returns
     ----------
@@ -123,18 +120,18 @@ def origin2center_of_mass(inertia, center_of_mass, mass):
     x = center_of_mass[0]
     y = center_of_mass[1]
     z = center_of_mass[2]
-    translation_matrix = [y**2+z**2, x**2+z**2, x**2+y**2,
+    translation_matrix = [y**2 + z**2, x**2 + z**2, x**2 + y**2,
                          -x*y, -y*z, -x*z]
-    return [ round(i - mass*t, 6) for i, t in zip(inertia, translation_matrix)]
+    return [round(i - mass*t, 6) for i, t in zip(inertia, translation_matrix)]
 
 
 def prettify(elem):
     """
     Return a pretty-printed XML string for the Element.
+    
     Parameters
     ----------
     elem : xml.etree.ElementTree.Element
-    
     
     Returns
     ----------
@@ -144,12 +141,24 @@ def prettify(elem):
     reparsed = minidom.parseString(rough_string)
     return reparsed.toprettyxml(indent="  ")
 
+
 def copy_package(save_dir, package_dir):
-    try: os.mkdir(save_dir + '/launch')
-    except: pass 
-    try: os.mkdir(save_dir + '/urdf')
-    except: pass 
-    copy_tree(package_dir, save_dir)
+    try:
+        # Check if the target directory exists, if not, create it
+        if not os.path.exists(save_dir + '/launch'):
+            os.mkdir(save_dir + '/launch')
+        if not os.path.exists(save_dir + '/urdf'):
+            os.mkdir(save_dir + '/urdf')
+        
+        # Check if the package directory exists and copy it
+        if os.path.exists(package_dir):
+            shutil.copytree(package_dir, save_dir, dirs_exist_ok=True)  # dirs_exist_ok=True allows overwriting
+        else:
+            print(f"Package directory '{package_dir}' does not exist.")
+        
+    except Exception as e:
+        print(f"Error copying package: {e}")
+
 
 def update_cmakelists(save_dir, package_name):
     file_name = save_dir + '/CMakeLists.txt'
@@ -159,6 +168,7 @@ def update_cmakelists(save_dir, package_name):
             sys.stdout.write("project(" + package_name + ")\n")
         else:
             sys.stdout.write(line)
+
 
 def update_package_xml(save_dir, package_name):
     file_name = save_dir + '/package.xml'
@@ -170,4 +180,3 @@ def update_package_xml(save_dir, package_name):
             sys.stdout.write("<description>The " + package_name + " package</description>\n")
         else:
             sys.stdout.write(line)
-        
