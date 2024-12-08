@@ -1,9 +1,3 @@
-# fusion2urdf
-
-Here's a more concise version of the README, focusing only on the changes you made:
-
----
-
 # URDF Exporter for Fusion 360
 
 This is a **fork** of the original [syuntoku14/fusion2urdf](https://github.com/syuntoku14/fusion2urdf) repository. 
