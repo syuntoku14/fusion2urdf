@@ -1,7 +1,23 @@
 # fusion2urdf
 
-I have stopped developing this repo, but any contributions are welcome.
-This repo only supports Gazebo, if you are using pybullet, see: https://github.com/yanshil/Fusion2PyBullet.
+Here's a more concise version of the README, focusing only on the changes you made:
+
+---
+
+# URDF Exporter for Fusion 360
+
+This is a **fork** of the original [syuntoku14/fusion2urdf](https://github.com/syuntoku14/fusion2urdf) repository. 
+
+## **Changes Made**
+- **Python 3.12 Compatibility**: Replaced the deprecated `distutils.dir_util` with `shutil` for directory operations, ensuring compatibility with **Python 3.12** used by Fusion 360.
+- **Error Handling**: Improved error handling to prevent `FileExistsError` when copying directories if they already exist.
+- **Directory Operations**: All directory copying is now done using `shutil.copytree`.
+
+## **Notes**
+- The script is updated for use with **Python 3.12**, as Fusion 360 no longer supports `distutils` in versions above Python 3.10.
+
+---
+
 
 
 ## Updated!!!
